@@ -7,7 +7,7 @@ sub new
 {
 	my $class = shift;
 	my $self = {
-		config_file	=> 'httpd.conf'
+		config_file	=> '/etc/freepanel/freepanel.conf'
 	};
 
 	# load the configuration vars

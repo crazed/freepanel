@@ -5,55 +5,52 @@ sub new
 {
 	my $class = shift;
 	my $self = { 
-		config_file	=> 'domains.conf'
+		config_file	=> '/etc/freepanel/freepanel.conf'
 	};
 
 	# load the configuration vars
-	open (CONF, '<', $self->{config_file}) or die ("ERR: domains.conf file is missing.\n");
-	my $config;
-	my @arguments;
-	while (<CONF>) {
-		$config = $_;
-
-		chomp($config);
-		if ($config =~ /^\#./) {
-			# line is comment skip it
-			next;
-		}
 	
-		@arguments = split(/=/, $config);		
-		
-		if ($arguments[0] =~ /^zones_dir$/) {
-			$self->{zones_dir} = $arguments[1];
-			next;
-		}
-
-		if ($arguments[0] =~ /^nsd_config$/) {
-			$self->{nsd_config} = $arguments[1];
-			next;
-		}
-
-		if ($arguments[0] =~ /^include_xfer$/) {
-			$self->{include_xfer} = $arguments[1];
-			next;
-		}
-
-		if ($arguments[0] =~ /^log_file$/) {
-			$self->{log_file} = $arguments[1];
-			next;
-		}
-
-		if ($arguments[0] =~ /^debug$/) {
-			$self->{debug} = $arguments[1];
-			next;
-		}
-	}
-	close CONF;
-	
+	getConfiguration($self);
 
 	bless $self, $class;
 	return $self;
 
+}
+sub getConfiguration
+{
+	my ($self) = @_;
+	open (CONF, '<', $self->{config_file}) or die ("ERR: ".$self->{config_file}." file is missing.\n");
+        my @configs = ("zones_dir", "nsd_config", "include_xfer", "log_file", "nsd_template",
+                        "debug");
+
+
+	while (<CONF>) {
+		my $line = $_;
+
+		chomp($line);
+		if ($line =~ /^\#./) {
+			# line is comment skip it
+			next;
+		}
+	
+		my @split = split(/=/, $line);
+
+		for my $config (@configs) {
+			if ($split[0] =~ /^$config$/) {
+				$self->{$config} = $split[1];
+			}
+		}	
+	}
+
+	if ($self->{debug}) {
+		print "[DEBUG] configurations loaded:\n";
+		for my $config (@configs) {
+			print "\t$config=".$self->{$config}."\n"
+		}
+	}
+	close CONF;
+
+	return 1;
 }
 #############
 # functions #
@@ -104,7 +101,7 @@ sub addDomain {
 
 	# create zone file
 	open(ZONE, '>', $self->{zones_dir}."/$domain");
-	open(ZONE_T, '<', $self->{zones_dir}.'/template.zone');
+	open(ZONE_T, '<', $self->{nsd_template});
 	print "[+]:  Creating zone file $domain..\n" if $self->{debug};
 	while(<ZONE_T>) {
 		s/<DOMAIN>/$domain/;
@@ -236,5 +233,13 @@ sub setDebug {
 	my ($self, $value) = @_;
 	$self->{debug} = $value;
 	return $self->{debug};
+}
+
+sub getZoneDir {
+	my ($self) = @_;
+	if (-d $self->{zones_dir}) {
+		return $self->{zones_dir}; 
+	}
+	die ("Error: zone dir does not exist.\n");
 }
 1;

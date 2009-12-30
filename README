@@ -1,1 +1,12 @@
-OMG FIRST COMMIT
+SETTING UP DEV ENVIRONMENT
+==========================
+yum install -y nsd httpd postfix mysql dovecot
+mkdir /etc/httpd/{vhosts,inactive}
+mkdir /etc/nsd/zones
+cp -r /path/src/freepanel /etc
+
+
+RUNNING TESTS
+=========================
+perl /panel/src/httpd/httpd_test.pl
+perl /panel/src/nsd/nsd_test.pl
