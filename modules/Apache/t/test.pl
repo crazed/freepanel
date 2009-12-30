@@ -2,10 +2,10 @@
 use strict;
 
 # test all functions for httpd.pm
-use Httpd;
+use Apache;
 
 my $domain = "example.com";
-my $httpd = new DP::Httpd();
+my $httpd = new admin::apache();
 $httpd->setDebug(0);
 
 print "Adding new site.................";

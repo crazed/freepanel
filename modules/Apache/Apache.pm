@@ -1,8 +1,14 @@
 #!/usr/bin/perl
-package DP::Httpd;
+package admin::apache;
 use strict;
+use Config::General;
+#use Cwd;
+#my $cwd = cwd;
+#use lib "../config/";
+#use config;
 
 ###################### Class constructors ###################### 
+my $conf;
 sub new
 {
 	my $class = shift;
@@ -11,12 +17,28 @@ sub new
 	};
 
 	# load the configuration vars
-	getConfiguration($self);
-
+	#getConfiguration($self);
+	#$conf = new admin::config();
 	bless $self, $class;
+	loadConfigs($self,$self->{config_file});
+
 	return $self;
 }
 
+sub loadConfigs {
+	my ($self, $file) = @_;
+	
+	my $config = new Config::General($file);
+	my %vars = $config->getall();
+
+	$self->setDebug(%vars->{global}{debug});
+	$self->setVhostTemplate(%vars->{apache}{vhost_template});
+	$self->setVhostDir(%vars->{apache}{vhost_dir});
+	$self->setInactiveDir(%vars->{apache}{inactive_dir});
+	$self->setWebDir(%vars->{apache}{web_dir});
+	$self->setHttpUID(%vars->{apache}{http_uid});
+	$self->setHttpGID(%vars->{apache}{http_gid});
+}
 sub getConfiguration
 {
 	my ($self) = @_;
@@ -104,8 +126,8 @@ sub addWebDir {
 		return 0;
 	}
 
-	my $uid = $self->getWebDirUID();
-	my $gid = $self->getWebDirGID();
+	my $uid = $self->getHttpUID();
+	my $gid = $self->getHttpGID();
 	my $base_dir = $self->getWebDir()."/$domain";
 	my @dirs = ($base_dir, $base_dir."/web");
 
@@ -187,7 +209,7 @@ sub enableSite {
 
 sub restartApache {
 	my ($self) = @_;
-	print "[*]: Apache is being restarted\n" if $self->{debug};
+	print "[*]: Apache is being restarted\n" if $conf->getDebug;
 	return 1;
 }
 
@@ -276,7 +298,7 @@ sub getWebDir {
 	die ("[error] web_dir directory does not exist\n");
 }
 
-sub getWebDirUID {
+sub getHttpUID {
 	my ($self) = @_;
 
 	if ($self->{http_uid} =~ /^?\d+$/) {
@@ -284,11 +306,40 @@ sub getWebDirUID {
 	}
 }
 
-sub getWebDirGID {
+sub getHttpGID {
 	my ($self) = @_;
 
 	if ($self->{http_gid} =~ /^?\d+$/) {
 		return $self->{http_gid};
 	}
+}
+
+sub setVhostTemplate {
+	my ($self, $value) = @_;
+	$self->{vhost_template} = $value;
+}
+
+sub setVhostDir {
+	my ($self, $value) = @_;
+	$self->{vhost_dir} = $value;
+}
+sub setInactiveDir {
+	my ($self, $value) = @_;
+	$self->{inactive_dir} = $value;
+}
+
+sub setWebDir {
+	my ($self, $value) = @_;
+	$self->{web_dir} = $value;
+}
+
+sub setHttpUID {
+	my ($self, $value) = @_;
+	$self->{http_uid} = $value;
+}
+
+sub setHttpGID {
+	my ($self, $value) = @_;
+	$self->{http_gid} = $value;
 }
 1;
