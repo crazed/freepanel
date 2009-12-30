@@ -1,7 +1,0 @@
-#!/usr/bin/perl
-use Nsd;
-
-my $nsd = new DP::Nsd();
-
-#$nsd->addDomain('wtf.com');
-$nsd->removeDomain('wtf.com');
