@@ -5,8 +5,13 @@ mkdir /etc/httpd/{vhosts,inactive}
 mkdir /etc/nsd/zones
 cp -r /path/src/freepanel /etc
 
+POSTFIX DATABASE SETUP
+=========================
+mysql < /path/src/postfix/setup_db.sql
+
 
 RUNNING TESTS
 =========================
 perl /panel/src/httpd/httpd_test.pl
 perl /panel/src/nsd/nsd_test.pl
+perl /panel/src/postfix/postfix_test.pl

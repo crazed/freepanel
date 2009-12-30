@@ -32,9 +32,9 @@ sub dbConnect
 { my ($self) = @_;
 	# connect the database
 
-	my $dbh = DBI->connect("DBI:mysql:database=$self->{_dataBase};host=$self->{_host}",
-		"$self->{_user}", "$self->{_password}",
-		{'RaiseError' => $self->{_raiseError} } )
+	my $dbh = DBI->connect("DBI:mysql:database=$self->{mysql_db};host=$self->{mysql_host}",
+		"$self->{mysql_user}", "$self->{mysql_pass}",
+		{'RaiseError' => $self->{debug} } )
 
 		or die("[error] unable to connect database\n");
 
@@ -45,32 +45,55 @@ sub new
 {
 	my $class = shift;
 	my $self = {
-		_host		=> shift,
-		_port		=> shift,
-		_user		=> shift,
-		_password	=> shift,
-		_dataBase	=> shift,
-
-		# true/false values
-		_raiseError	=> shift,  # tells DBI to give errors
-		_debug		=> shift,  # used for debugging
+		config_file	=> '/etc/freepanel/freepanel.conf'
 	};
 
-	# table values
-	$self->{_userTable} = undef;
-	$self->{_domainTable} = undef;
-	$self->{_aliasTable} = undef;
-
-	# column values 
-	$self->{_aliasCols} = undef;	# ref to array \@arr
-	$self->{_userCols} = undef;	# ref to array \@arr
-	$self->{_domainCol} = undef;
-	$self->{_emailCol} = undef;
-	$self->{_aliasCol} = undef;
+	# load the config vars
+	getConfiguration($self);
 
 	# ~ bless the code ~
 	bless $self, $class;
 	return $self;
+}
+
+sub getConfiguration
+{
+	my ($self) = @_;
+	print "my config is ".$self->{config_file}."\n";
+	open (CONF, '<', $self->{config_file}) or die ("ERR: ".$self->{config_file}." file is missing.\n");
+	my $line;
+        my @configs = ("mysql_host", "mysql_port", "mysql_user", "mysql_pass",
+                        "mysql_db", "user_table", "domain_table", "alias_table", "debug");
+
+	while (<CONF>) {
+		my $line = $_;
+
+		chomp($line);
+
+		if ($line =~ /^\#./) {
+			# line is comment skip it
+			next;
+		}
+	
+		my @split = split(/=/, $line);
+
+		for my $config (@configs) {
+			if ($split[0] =~ /^$config$/) {
+				$self->{$config} = $split[1];
+			}
+		}	
+	}
+
+        if ($self->{debug}) {
+                print "[DEBUG] configurations loaded:\n";
+                for my $config (@configs) {
+                        print "\t$config=".$self->{$config}."\n"
+                }
+        }
+
+	close CONF;
+
+	return 1;
 }
 
 #########################################################################
@@ -133,20 +156,20 @@ sub setUserCols
 sub setAliasTable
 {
 	my ($self, $table) = @_;
-	$self->{_aliasTable} = $table if $table;
-	return $self->{_aliasTable};
+	$self->{alias_table} = $table if $table;
+	return $self->{alias_table};
 } 
 sub setDomainTable
 {
 	my ($self, $table) = @_;
-	$self->{_domainTable} = $table if $table;
-	return $self->{_domainTable};
+	$self->{domain_table} = $table if $table;
+	return $self->{domain_table};
 } 
 sub setUserTable
 {
 	my ($self, $table) = @_;
-	$self->{_userTable} = $table if $table;
-	return $self->{_userTable};
+	$self->{user_table} = $table if $table;
+	return $self->{user_table};
 } 
 
 ############################### END HELPERS #############################
@@ -184,15 +207,15 @@ sub addAlias
 		die("[error] $source is not a valid email\n");
 	}
 
-	if (!checkRecordExists($self, $self->{_domainTable}, $self->{_domainCol}, $email_prts[1])) {
+	if (!checkRecordExists($self, $self->{domain_table}, $self->{_domainCol}, $email_prts[1])) {
 		die("[error] $email_prts[1] is not a valid domain for this server\n");
 	}
 
-	if (!checkRecordExists($self, $self->{_userTable}, $self->{_emailCol}, $destination)) {
+	if (!checkRecordExists($self, $self->{user_table}, $self->{_emailCol}, $destination)) {
 		die("[error] destination address ($destination) does not exist");
 	}
 	
-	insertRecord($self, $self->{_aliasTable}, $self->{_aliasCols}, \@vals)
+	insertRecord($self, $self->{alias_table}, $self->{_aliasCols}, \@vals)
 		or die("[error] failure adding alias $source\n");
 }
 sub addDomain
@@ -203,11 +226,11 @@ sub addDomain
 	my @vals = ($domain);
 	my @cols = ($self->{_domainCol});
 
-	if (checkRecordExists($self, $self->{_domainTable}, $self->{_domainCol}, $domain)) {
+	if (checkRecordExists($self, $self->{domain_table}, $self->{_domainCol}, $domain)) {
 		die("[error] $domain already exists\n");
 	}
 
-	insertRecord($self, $self->{_domainTable}, \@cols, \@vals)
+	insertRecord($self, $self->{domain_table}, \@cols, \@vals)
 		or die("[error] failure adding domain $domain\n");	
 }
 sub addUser
@@ -235,7 +258,7 @@ sub addUser
 	# test if domain exists in domains table
 	my $test = checkRecordExists(
 		$self,
-		$self->{_domainTable}, 
+		$self->{domain_table}, 
 		$self->{_domainCol}, 
 		$email_prts[1]
 	);
@@ -244,7 +267,7 @@ sub addUser
 		die("[error] $email_prts[1] is not a valid domain for this server\n");
 	}
 	
-	insertRecord($self, $self->{_userTable}, $self->{_userCols}, $values) 
+	insertRecord($self, $self->{user_table}, $self->{_userCols}, $values) 
 		or die("[error] failure adding user $email_addr\n");
 }
 sub modifyUser
@@ -252,27 +275,27 @@ sub modifyUser
 	# arguments to take
 	my ($self, $email_addr, $columns, $values) = @_;
 	my $selector = $self->{_emailCol};
-	updateRecord($self, $self->{_userTable}, $selector, $email_addr, $columns, $values)
+	updateRecord($self, $self->{user_table}, $selector, $email_addr, $columns, $values)
 		or die("[error] failure to modify $email_addr\n");
 }
 sub delUser
 {
 	#arguments
 	my ($self, $email_addr) = @_;
-	deleteRecord($self, $self->{_userTable}, $self->{_emailCol}, $email_addr)
+	deleteRecord($self, $self->{user_table}, $self->{_emailCol}, $email_addr)
 		or die("[error] failed to remove $email_addr\n");
 }
 sub delDomain
 {
 	my ($self, $domain) = @_;
-	deleteRecord($self, $self->{_domainTable}, $self->{_domainCol}, $domain)
+	deleteRecord($self, $self->{domain_table}, $self->{_domainCol}, $domain)
 		or die("[error] failed to remove $domain\n");
 }
 
 sub delAlias
 {
 	my ($self, $alias) = @_;
-	deleteRecord($self, $self->{_aliasTable}, $self->{_aliasCol}, $alias)
+	deleteRecord($self, $self->{alias_table}, $self->{_aliasCol}, $alias)
 		or die("[error] failed to remove $alias\n");
 }
 
@@ -281,7 +304,7 @@ sub modifyAlias
 	my ($self, $alias, $columns, $values) = @_;
 	my $selector = $self->{_aliasCol};
 
-	updateRecord($self, $self->{_aliasTable}, $selector, $alias, $columns, $values)
+	updateRecord($self, $self->{alias_table}, $selector, $alias, $columns, $values)
 		or die("[error] failure to modify $alias\n");
 }
 sub addForward
@@ -299,18 +322,18 @@ sub addForward
 		die("[error] $destination is not a valid email\n");
 	}
 
-	if (!checkRecordExists($self, $self->{_domainTable}, $self->{_domainCol}, $email_prts[1])) {
+	if (!checkRecordExists($self, $self->{domain_table}, $self->{_domainCol}, $email_prts[1])) {
 		die("[error] $email_prts[1] is not a valid domain for this server\n");
 	}
 
 	# check if mailbox exists
-	if (checkRecordExists($self, $self->{_userTable}, $self->{_emailCol}, $source)) {
+	if (checkRecordExists($self, $self->{user_table}, $self->{_emailCol}, $source)) {
 		# set activate to 0 for user (stops recieving mail locally)
 		deactivateMail($self, $source);
 	}
 
 	# add to the alias column
-	insertRecord($self, $self->{_aliasTable}, $self->{_aliasCols}, [$source, $destination])
+	insertRecord($self, $self->{alias_table}, $self->{_aliasCols}, [$source, $destination])
 		or die("[error] failure adding alias $source\n");
 }
 sub activateMail
@@ -318,12 +341,12 @@ sub activateMail
 	my ($self, $email_addr) = @_;
 	my $selector = $self->{_emailCol};
 	# check if email addr exists in mailbox table
-	if (!checkRecordExists($self, $self->{_userTable}, $self->{_emailCol}, $email_addr)) {
+	if (!checkRecordExists($self, $self->{user_table}, $self->{_emailCol}, $email_addr)) {
 		die("[error] $email_addr does not exist in the database\n");
 	}
 
 	# modify the record
-	updateRecord($self, $self->{_userTable}, $selector, $email_addr, ['active'], [1])
+	updateRecord($self, $self->{user_table}, $selector, $email_addr, ['active'], [1])
 		or die("[error] failure to activate mailbox for $email_addr\n");	
 }
 sub deactivateMail
@@ -331,12 +354,12 @@ sub deactivateMail
 	my ($self, $email_addr) = @_;
 	my $selector = $self->{_emailCol};
 	# check if email addr exists in mailbox table
-	if (!checkRecordExists($self, $self->{_userTable}, $self->{_emailCol}, $email_addr)) {
+	if (!checkRecordExists($self, $self->{user_table}, $self->{_emailCol}, $email_addr)) {
 		die("[error] $email_addr does not exist in the database\n");
 	}
 
 	# modify the record
-	updateRecord($self, $self->{_userTable}, $selector, $email_addr, ['active'], [0])
+	updateRecord($self, $self->{user_table}, $selector, $email_addr, ['active'], [0])
 		or die("[error] failure to deactivate mailbox for $email_addr\n");	
 }
 ########################### END POSTFIX #################################
@@ -417,14 +440,14 @@ sub deleteRecord
 	}
 
 	# debug statement
-	print "[query] $query\n" if $self->{_debug};
+	print "[query] $query\n" if $self->{debug};
 
 	if ($self->{_dbh}->do($query)) {
-		print "[func] deleteRecord() success\n" if $self->{_debug};
+		print "[func] deleteRecord() success\n" if $self->{debug};
 		return 1;
 	}
 
-	print "[func] deleteRecord() fail\n" if $self->{_debug};
+	print "[func] deleteRecord() fail\n" if $self->{debug};
 	return 0;
 }
 
@@ -440,7 +463,7 @@ sub updateRecord
 	
 	# if the arrays aren't the same amount.. input is fudged throw an error
 	if ($#$columns != $#$values) {
-		print "[func] modifyRecord() fail :: number of columns supplied does not match number of values\n" if $self->{_debug};
+		print "[func] modifyRecord() fail :: number of columns supplied does not match number of values\n" if $self->{debug};
 		return 0;
 	}
 	# format the array data correctly
@@ -461,11 +484,11 @@ sub updateRecord
 		$query = sprintf("UPDATE %s SET %s WHERE %s='%s'", $table, $update_string, $selector, $id);
 	}
 
-	print "[query] $query\n" if $self->{_debug};
+	print "[query] $query\n" if $self->{debug};
 
 	# run the query
 	if ($self->{_dbh}->do($query)) {
-		print "[func] updateRecord() success\n" if $self->{_debug};
+		print "[func] updateRecord() success\n" if $self->{debug};
 		return 1;	# success
 	}
 
@@ -488,7 +511,7 @@ sub insertRecord
 	if ($#$columns != $#$values) {
 		print "[var] \@columns is @{$columns}\n";
 		print "[var] \@values is @{$values}\n";
-		print "[func] insertRecord() fail :: number of columns supplied does not match number of values\n" if $self->{_debug};
+		print "[func] insertRecord() fail :: number of columns supplied does not match number of values\n" if $self->{debug};
 		return 0;
 	}
 	# format the strings for query usage
@@ -508,15 +531,15 @@ sub insertRecord
 	$query = sprintf("INSERT INTO %s (%s) VALUES(%s)", $table, $column_string, $value_string);
 
 	# debug statements
-	print "[query] $query\n" if $self->{_debug};
+	print "[query] $query\n";# if $self->{debug};
 
 	# insert the record
 	if ($self->{_dbh}->do($query)) {
-		print "[func] insertRecord() success\n" if $self->{_debug};
+		print "[func] insertRecord() success\n" if $self->{debug};
 		return 1; 	# success
 	}
 
-	print "[func] insertRecord() fail\n" if $self->{_debug};
+	print "[func] insertRecord() fail\n" if $self->{debug};
 	return 0;		# fail
 
 }
@@ -527,7 +550,7 @@ sub checkRecordExists
 	my ($self, $table, $column, $value) = @_;
 
 	my $query = sprintf("SELECT COUNT(*) FROM %s WHERE %s = '%s'", $table, $column, $value);
-	print "[query] checkign for record.. $query\n" if $self->{_debug};
+	print "[query] checkign for record.. $query\n" if $self->{debug};
 	my $dbh = $self->{_dbh};
 	my $sth = $dbh->prepare($query);
 	
