@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 package admin::apache;
 use strict;
-use Config::General;
+use config;
+our @ISA = qw(admin::config);
 #use Cwd;
 #my $cwd = cwd;
 #use lib "../config/";
@@ -12,15 +13,12 @@ my $conf;
 sub new
 {
 	my $class = shift;
-	my $self = {
-		config_file	=> '/etc/freepanel/freepanel.conf'
-	};
+	my $self = $class->SUPER::new();
 
 	# load the configuration vars
 	#getConfiguration($self);
 	#$conf = new admin::config();
 	bless $self, $class;
-	loadConfigs($self,$self->{config_file});
 
 	return $self;
 }
@@ -251,95 +249,4 @@ sub checkWebDir {
 	return 0;
 }
 
-
-###################### Set functions ###################### 
-
-sub setDebug {
-	my ($self, $value) = @_;
-	$self->{debug} = $value;
-	return $self;
-}
-
-###################### Get functions ###################### 
-
-sub getVhostTemplate {
-	my ($self) = @_;
-
-	if (-e $self->{vhost_template}) {
-		return $self->{vhost_template};
-	}
-	die ("[error] vhost_template file does not exist\n");
-}
-
-sub getVhostDir {
-	my ($self) = @_;
-
-	if (-d $self->{vhost_dir}) {
-		return $self->{vhost_dir};
-	}
-	die ("[error] vhost_dir directory does not exist\n");
-}
-
-sub getInactiveDir {
-	my ($self) = @_;
-
-	if (-d $self->{inactive_dir}) {
-		return $self->{inactive_dir};
-	}
-	die ("[error] inactive_dir directory does not exist\n");
-}
-
-sub getWebDir {
-	my ($self) = @_;
-
-	if (-d $self->{web_dir}) {
-		return $self->{web_dir};
-	}
-	die ("[error] web_dir directory does not exist\n");
-}
-
-sub getHttpUID {
-	my ($self) = @_;
-
-	if ($self->{http_uid} =~ /^?\d+$/) {
-		return $self->{http_uid};
-	}
-}
-
-sub getHttpGID {
-	my ($self) = @_;
-
-	if ($self->{http_gid} =~ /^?\d+$/) {
-		return $self->{http_gid};
-	}
-}
-
-sub setVhostTemplate {
-	my ($self, $value) = @_;
-	$self->{vhost_template} = $value;
-}
-
-sub setVhostDir {
-	my ($self, $value) = @_;
-	$self->{vhost_dir} = $value;
-}
-sub setInactiveDir {
-	my ($self, $value) = @_;
-	$self->{inactive_dir} = $value;
-}
-
-sub setWebDir {
-	my ($self, $value) = @_;
-	$self->{web_dir} = $value;
-}
-
-sub setHttpUID {
-	my ($self, $value) = @_;
-	$self->{http_uid} = $value;
-}
-
-sub setHttpGID {
-	my ($self, $value) = @_;
-	$self->{http_gid} = $value;
-}
 1;

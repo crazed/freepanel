@@ -23,6 +23,11 @@ sub getDebug {
 	return %configs->{global}{debug};
 }
 
+sub setDebug {
+	my ($self, $value) = @_;
+	%configs->{global}{debug} = $value;
+}
+
 sub getLogFile {
 	my ($self) = @_;
 	return %configs->{global}{log_file};
@@ -52,7 +57,7 @@ sub getHttpGID {
 	return %configs->{apache}{http_gid};
 }
 
-sub getZonesDir {
+sub getZoneDir {
 	my ($self) = @_;
 	return %configs->{nsd}{zones_dir};
 }
@@ -61,9 +66,9 @@ sub getZoneTemplate {
 	return %configs->{nsd}{zone_template};
 }
 
-sub getDnsConfig {
+sub getNsdConfig {
 	my ($self) = @_;
-	return %configs->{nsd}{nsd_configs};
+	return %configs->{nsd}{nsd_config};
 }
 
 sub getMailDbConfig {

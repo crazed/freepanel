@@ -1,8 +1,10 @@
 #!/usr/bin/perl
-package DP::Postfix;
+package admin::postfix;
 use strict;
 use DBI;
 use Crypt::PasswdMD5 qw(unix_md5_crypt);
+use config;
+our @ISA = qw(admin::config);
 #########################################################################
 #			        DP::Postfix				#
 #########################################################################
@@ -29,7 +31,8 @@ use Crypt::PasswdMD5 qw(unix_md5_crypt);
 #				Class Constructor	 		 #
 ##########################################################################
 sub dbConnect
-{ my ($self) = @_;
+{ 
+	my ($self) = @_;
 	# connect the database
 
 	my $dbh = DBI->connect("DBI:mysql:database=$self->{mysql_db};host=$self->{mysql_host}",
@@ -43,57 +46,19 @@ sub dbConnect
 }
 sub new
 {
-	my $class = shift;
-	my $self = {
-		config_file	=> '/etc/freepanel/freepanel.conf'
-	};
+        my $class = shift;
+        my $self = $class->SUPER::new();
 
-	# load the config vars
-	getConfiguration($self);
-
-	# ~ bless the code ~
 	bless $self, $class;
-	return $self;
-}
+	my $hash = $self->getMailDbConfig();
 
-sub getConfiguration
-{
-	my ($self) = @_;
-	print "my config is ".$self->{config_file}."\n";
-	open (CONF, '<', $self->{config_file}) or die ("ERR: ".$self->{config_file}." file is missing.\n");
-	my $line;
-        my @configs = ("mysql_host", "mysql_port", "mysql_user", "mysql_pass",
-                        "mysql_db", "user_table", "domain_table", "alias_table", "debug");
-
-	while (<CONF>) {
-		my $line = $_;
-
-		chomp($line);
-
-		if ($line =~ /^\#./) {
-			# line is comment skip it
-			next;
-		}
-	
-		my @split = split(/=/, $line);
-
-		for my $config (@configs) {
-			if ($split[0] =~ /^$config$/) {
-				$self->{$config} = $split[1];
-			}
-		}	
-	}
-
-        if ($self->{debug}) {
-                print "[DEBUG] configurations loaded:\n";
-                for my $config (@configs) {
-                        print "\t$config=".$self->{$config}."\n"
-                }
+        # load configuration variables
+        while ( my ($key, $value) = each(%$hash) ) {
+                $self->{$key} = $value;
         }
 
-	close CONF;
-
-	return 1;
+	$self->{debug} = $self->getDebug();
+        return $self;
 }
 
 #########################################################################

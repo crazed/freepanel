@@ -1,57 +1,18 @@
 #!/usr/bin/perl
-package DP::Nsd;
+package admin::nsd;
+use config;
 use strict;
+our @ISA = qw(admin::config);
 sub new
 {
 	my $class = shift;
-	my $self = { 
-		config_file	=> '/etc/freepanel/freepanel.conf'
-	};
-
-	# load the configuration vars
+	my $self = $class->SUPER::new();
 	
-	getConfiguration($self);
-
 	bless $self, $class;
 	return $self;
 
 }
-sub getConfiguration
-{
-	my ($self) = @_;
-	open (CONF, '<', $self->{config_file}) or die ("ERR: ".$self->{config_file}." file is missing.\n");
-        my @configs = ("zones_dir", "nsd_config", "include_xfer", "log_file", "nsd_template",
-                        "debug");
 
-
-	while (<CONF>) {
-		my $line = $_;
-
-		chomp($line);
-		if ($line =~ /^\#./) {
-			# line is comment skip it
-			next;
-		}
-	
-		my @split = split(/=/, $line);
-
-		for my $config (@configs) {
-			if ($split[0] =~ /^$config$/) {
-				$self->{$config} = $split[1];
-			}
-		}	
-	}
-
-	if ($self->{debug}) {
-		print "[DEBUG] configurations loaded:\n";
-		for my $config (@configs) {
-			print "\t$config=".$self->{$config}."\n"
-		}
-	}
-	close CONF;
-
-	return 1;
-}
 #############
 # functions #
 #############
@@ -65,7 +26,7 @@ sub logIt{
 	my ($sec, $min, $hour, $mday, $mon, 
 		$year, $wday, $yday, $isdst)=localtime(time);
 
-	open LOG, '>>', $self->{log_file};
+	open LOG, '>>', $self->getLogFile();
 	my $timestamp = sprintf("%02d-%02d-%4d %02d:%02d:%02d",
 		$mon+1,$mday,$year+1900,$hour,$min,$sec);
 	print LOG "$timestamp :: $log\n";
@@ -88,21 +49,21 @@ sub addDomain {
 		$year, $wday, $yday, $isdst)=localtime(time);
 	my $serial = sprintf("%4d%02d%02d00",
 		$year+1900,$mon+1,$mday);
-	print ("[*]:  Serial: $serial\n") if $self->{debug};	
+	print ("[*]:  Serial: $serial\n") if $self->getDebug();	
 
 	# add to nsd.conf
-	open (NSD, '>>', $self->{nsd_config});
-	print "[+]:  Adding $domain to nsd.conf..\n" if $self->{debug};
+	open (NSD, '>>', $self->getNsdConfig());
+	print "[+]:  Adding $domain to nsd.conf..\n" if $self->getDebug();
 	print NSD "zone:\n\t";
 	print NSD "name: \"$domain\"\n\t";
 	print NSD "zonefile: \"$domain\"\n\t";
-	print NSD "include: ".$self->{include_xfer}."\n\n";
+	#print NSD "include: ".$self->{include_xfer}."\n\n";
 	close NSD;
 
 	# create zone file
-	open(ZONE, '>', $self->{zones_dir}."/$domain");
-	open(ZONE_T, '<', $self->{nsd_template});
-	print "[+]:  Creating zone file $domain..\n" if $self->{debug};
+	open(ZONE, '>', $self->getZoneDir()."/$domain");
+	open(ZONE_T, '<', $self->getZoneTemplate());
+	print "[+]:  Creating zone file $domain..\n" if $self->getDebug();
 	while(<ZONE_T>) {
 		s/<DOMAIN>/$domain/;
 		s/<SERIAL>/$serial/;
@@ -125,7 +86,7 @@ sub removeDomain {
 	my $end_delete;	
 
 	# open the config file and load to array
-	open (NSD, '<', $self->{nsd_config});
+	open (NSD, '<', $self->getNsdConfig());
 	my @config = <NSD>;
 	close NSD;
 
@@ -169,17 +130,17 @@ sub removeDomain {
 	}
 
 	# rewrite the file without the lines that needed to be removed
-	open (NSD, '>', $self->{nsd_config});
+	open (NSD, '>', $self->getNsdConfig());
 	foreach my $line (@config) {
 		print NSD $line if $line;
 	}
 	close NSD;
-	print "[-]:  $domain was removed from ". $self->{nsd_config} ."\n" if $self->{debug};
+	print "[-]:  $domain was removed from ". $self->getNsdConfig() ."\n" if $self->getDebug();
 
 	# remove the zone file
-	if (-e $self->{zones_dir}."/$domain") {
-		unlink($self->{zones_dir}."/$domain");
-		print "[-]:  $domain zone file was removed\n" if $self->{debug};
+	if (-e $self->getZoneDir()."/$domain") {
+		unlink($self->getZoneDir()."/$domain");
+		print "[-]:  $domain zone file was removed\n" if $self->getDebug();
 	}
 		
 
@@ -203,43 +164,29 @@ sub checkDomains {
 	# domain can only have '-', a-z, 0-9. 
 	# must have at least 2 letters for tld
 	if ($domain !~ /^([-a-z0-9]+\.[a-z]{2,})/) {
-		print "[!]:  $domain is not a valid domain\n";			
+		print "[!]:  $domain is not a valid domain\n" if $self->getDebug();			
 		return 0;
 	}
 	
 	# verify the zone doesn't already exist
-	if (-e $self->{zones_dir}."/$domain") {
-		print "[!]:  $domain zone file exists already\n" if $self->{debug};		
+	if (-e $self->getZoneDir()."/$domain") {
+		print "[!]:  $domain zone file exists already\n" if $self->getDebug();		
 		$err = -1;
 	}
 
 	# look through the nsd configuration for zone
 	# 	name: "domain.com"
-	open (NSD, '<', $self->{nsd_config});
+	open (NSD, '<', $self->getNsdConfig());
 	while (<NSD>) {
 		#print $_;
 		chomp ($_);
 		if ($_ =~ /name\: \"$domain\"/) {
-			print "[!]:  $domain exists in " . $self->{nsd_config} . " configuration file\n" if $self->{debug};
+			print "[!]:  $domain exists in " . $self->getNsdConfig() . " configuration file\n" if $self->getDebug();
 			$err--;
 		}	
 	}
 
 	return $err;
 	
-}
-
-sub setDebug {
-	my ($self, $value) = @_;
-	$self->{debug} = $value;
-	return $self->{debug};
-}
-
-sub getZoneDir {
-	my ($self) = @_;
-	if (-d $self->{zones_dir}) {
-		return $self->{zones_dir}; 
-	}
-	die ("Error: zone dir does not exist.\n");
 }
 1;

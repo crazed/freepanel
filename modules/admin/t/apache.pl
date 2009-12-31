@@ -2,7 +2,8 @@
 use strict;
 
 # test all functions for httpd.pm
-use Apache;
+use lib '..';
+use apache;
 
 my $domain = "example.com";
 my $httpd = new admin::apache();

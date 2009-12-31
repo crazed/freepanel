@@ -5,9 +5,17 @@ mkdir /etc/httpd/{vhosts,inactive}
 mkdir /etc/nsd/zones
 cp -r /path/src/freepanel /etc
 
+STARTING STAND ALONE SERVER
+=========================
+cd /path/src/setup/FreePanel
+perl Makefile.PL
+make && make install
+cd /path/src/run
+perl freepanel.pl
+
 POSTFIX DATABASE SETUP
 =========================
-mysql < /path/src/postfix/setup_db.sql
+mysql < /path/src/setup/setup_db.sql
 
 
 RUNNING TESTS

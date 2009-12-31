@@ -1,9 +1,10 @@
 #!/usr/bin/perl
 use strict;
-use Nsd;
+use lib '..';
+use nsd;
 
 my $domain = "example.com";
-my $nsd = new DP::Nsd();
+my $nsd = new admin::nsd();
 $nsd->setDebug(0);
 
 print "Adding new domain.............";
@@ -15,6 +16,7 @@ if ($nsd->checkDomains($domain) == -2) {
 #	print "ok!\n";
 #}
 else {
+	print "nsd conf file: ". $nsd->getNsdConfig();
 	die "error :(\n";
 }
 

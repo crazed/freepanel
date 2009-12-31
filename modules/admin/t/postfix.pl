@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 use strict;
-use Postfix;
+use postfix;
 #use Crypt::PasswdMD5 qw(unix_md5_crypt);
 
-my $postfix = new DP::Postfix();
+my $postfix = new admin::postfix();
 
 my $quota_bytes = 1024*1024*10;
 my $password = "password";
