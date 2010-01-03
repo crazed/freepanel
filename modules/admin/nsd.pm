@@ -38,7 +38,7 @@ sub logIt{
 #	returns 1 on success, 0 on fail		#
 #///////////////////////////////////////////////#
 sub addDomain {
-	my ($self, $domain) = @_;
+	my ($self, $domain, $ip_addr) = @_;
 
 	# check for errors
 	if (checkDomains($self, $domain) != 1) {
@@ -67,6 +67,7 @@ sub addDomain {
 	while(<ZONE_T>) {
 		s/<DOMAIN>/$domain/;
 		s/<SERIAL>/$serial/;
+		s/<IP_ADDR>/$ip_addr/;
 		print ZONE;
 	}
 	close ZONE_T;
@@ -134,8 +135,7 @@ sub removeDomain {
 	foreach my $line (@config) {
 		print NSD $line if $line;
 	}
-	close NSD;
-	print "[-]:  $domain was removed from ". $self->getNsdConfig() ."\n" if $self->getDebug();
+	close NSD; print "[-]:  $domain was removed from ". $self->getNsdConfig() ."\n" if $self->getDebug();
 
 	# remove the zone file
 	if (-e $self->getZoneDir()."/$domain") {
@@ -188,5 +188,10 @@ sub checkDomains {
 
 	return $err;
 	
+}
+
+sub restart {
+	# restart NSD 
+	return 1;
 }
 1;

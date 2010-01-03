@@ -18,6 +18,19 @@ sub new
 	return $self;
 }
 
+sub getHttpService {
+	my ($self) = @_;
+	return %configs->{global}{http};
+}
+sub getMailService {
+	my ($self) = @_;
+	return %configs->{global}{mail};
+}
+sub getNameService {
+	my ($self) = @_;
+	return %configs->{global}{dns};
+}
+
 sub getDebug {
 	my ($self) = @_;
 	return %configs->{global}{debug};

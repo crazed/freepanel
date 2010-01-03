@@ -4,7 +4,7 @@
   
   my $app = FreePanel->new(
   map => {
-  home => 'Home',
+  home => 'Home'
   },
   );
    

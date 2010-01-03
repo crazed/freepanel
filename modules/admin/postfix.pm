@@ -58,6 +58,7 @@ sub new
         }
 
 	$self->{debug} = $self->getDebug();
+
         return $self;
 }
 
@@ -88,6 +89,11 @@ sub new
 #	- mysql table used for users
 #########################################################################
 
+sub setDebug {
+	my ($self, $value) = @_;
+
+	$self->{debug} = $value;
+}
 sub setAliasCols
 {
 	my ($self, $columns) = @_;
@@ -496,7 +502,7 @@ sub insertRecord
 	$query = sprintf("INSERT INTO %s (%s) VALUES(%s)", $table, $column_string, $value_string);
 
 	# debug statements
-	print "[query] $query\n";# if $self->{debug};
+	print "[query] $query\n" if $self->{debug};
 
 	# insert the record
 	if ($self->{_dbh}->do($query)) {
@@ -539,5 +545,9 @@ sub checkRecordExists
 	}
 }
 ############################ END MySql ##################################
+sub restart
+{
+	return 1;
+}
 
 1;

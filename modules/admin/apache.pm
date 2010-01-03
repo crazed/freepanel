@@ -15,70 +15,9 @@ sub new
 	my $class = shift;
 	my $self = $class->SUPER::new();
 
-	# load the configuration vars
-	#getConfiguration($self);
-	#$conf = new admin::config();
 	bless $self, $class;
 
 	return $self;
-}
-
-sub loadConfigs {
-	my ($self, $file) = @_;
-	
-	my $config = new Config::General($file);
-	my %vars = $config->getall();
-
-	$self->setDebug(%vars->{global}{debug});
-	$self->setVhostTemplate(%vars->{apache}{vhost_template});
-	$self->setVhostDir(%vars->{apache}{vhost_dir});
-	$self->setInactiveDir(%vars->{apache}{inactive_dir});
-	$self->setWebDir(%vars->{apache}{web_dir});
-	$self->setHttpUID(%vars->{apache}{http_uid});
-	$self->setHttpGID(%vars->{apache}{http_gid});
-}
-sub getConfiguration
-{
-	my ($self) = @_;
-	open (CONF, '<', $self->{config_file}) or die ("ERR: ".$self->{config_file}." file is missing.\n");
-	my $line;
-	my @arguments;
-
-	while (<CONF>) {
-		my $line = $_;
-
-		chomp($line);
-		if ($line =~ /^\#./) {
-			# line is comment skip it
-			next;
-		}
-	
-		my @split = split(/=/, $line);
-
-		my @configs = ("vhost_template", "vhost_dir", "inactive_dir", "web_dir", 
-			"log_file", "http_uid", "http_gid", "debug");
-
-		for my $config (@configs) {
-			if ($split[0] =~ /^$config$/) {
-				$self->{$config} = $split[1];
-			}
-		}	
-	}
-
-	if ($self->{debug}) {
-		print "[DEBUG] configurations loaded:
-	vhost_template=".$self->{vhost_template}."
-	vhost_dir=".$self->{vhost_dir}."
-	inactive_dir=".$self->{inactive_dir}."
-	web_dir=".$self->{web_dir}."
-	log_file=".$self->{log_file}."
-	http_uid=".$self->{http_uid}."
-	http_gid=".$self->{http_gid}."
-	debug=1\n";
-	}
-	close CONF;
-
-	return 1;
 }
 
 ###################### Main functions ###################### 
@@ -205,9 +144,9 @@ sub enableSite {
 	return 1;
 }
 
-sub restartApache {
+sub restart {
 	my ($self) = @_;
-	print "[*]: Apache is being restarted\n" if $conf->getDebug;
+	print "[*]: Apache is being restarted\n" if $self->getDebug;
 	return 1;
 }
 
