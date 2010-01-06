@@ -52,6 +52,9 @@ sub addSite {
 		}
 	}
 
+	close VHOST_T;
+	close VHOST;
+
 	return 1;
 }
 

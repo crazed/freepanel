@@ -17,6 +17,7 @@ if (-e $httpd->getVhostDir()."/$domain") {
 else {
 	print "error\n";
 }
+exit(0);
 
 print "Adding new web dir..............";
 $httpd->addWebDir($domain);

@@ -1,22 +1,15 @@
-package Home;
+package Example;
 use strict;
 use warnings;
 use lib '../modules/admin';
 use control;
 
-sub default {
+sub run {
 	my ($self,$app) = @_;
-	my $control = $app->{app}{control};
 	my $vars = {
 		name => "Mike",
 		debt => "a million dollars",
 		deadline => "NOW",
-		dns => $control->getNameService(),
-		mail => $control->getMailService(),
-		http => $control->getHttpService(),
-		debug => $control->getDebug(),
-		vhost_dir => $control->getVhostDir(),
-		vhost_template => $control->getVhostTemplate(),
 	};
 
 	$app->{tt}->process('home.tt',$vars,\my $out);
@@ -24,13 +17,12 @@ sub default {
 	return $out;
 }
 
-sub go {
+sub proccessForm {
 	my ($self, $app) = @_;
 
 	# grab the form variables
-	my $params = $app->{req}->parameters;
-	#my $control = new FreePanel::Control();
-	my $control = $app->{app}{control};
+	my $params = $app->{req}->paramaters;
+	my $control = new FreePanel::Control();
 	
 	# run some validation tests
 	if (validateForm($self, $params)) {
@@ -41,7 +33,7 @@ sub go {
 		#	full name
 		#	user
 		#	hashed password
-		my $hash = $control->getMailObj()->hash($params->{password},'md5crypt');
+		my $hash = $control->getMailObj()->hash($params->{pass},'md5crypt');
 
 		$control->newSite(
 			$params->{domain},
