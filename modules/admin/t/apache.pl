@@ -17,7 +17,14 @@ if (-e $httpd->getVhostDir()."/$domain") {
 else {
 	print "error\n";
 }
-exit(0);
+
+print "Adding server alias.............";
+if ($httpd->addServerAlias($domain, ["wtf.com", "forthelulz.com"])) {
+	print "ok!\n";
+}
+else {
+	print "error\n";
+}
 
 print "Adding new web dir..............";
 $httpd->addWebDir($domain);

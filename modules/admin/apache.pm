@@ -21,6 +21,64 @@ sub new
 }
 
 ###################### Main functions ###################### 
+sub addServerAlias {
+	my ($self, $domain, $alias_array) = @_;
+
+	print "[DEBUG] alias_array: @$alias_array\n" if $self->getDebug();
+
+	# make sure the cofnig file exists
+	if (!$self->checkVhost($domain)) {
+		print "[!]: $domain configuration does not exist.\n" if $self->getDebug();
+		return 0;
+	}
+
+	my $alias;
+	foreach my $element (@$alias_array) {
+		$alias = "$element $alias";
+	}
+
+	print "[DEBUG] aliases: $alias\n" if $self->getDebug();
+
+	# load the domain config into an array
+	my $vhost_dir = $self->getVhostDir();
+	open VHOST, '<', $vhost_dir."/$domain";
+	my @config = <VHOST>;
+	close VHOST;
+
+	# search for ServerAlias directive
+	my $alias_line = 0;
+	my $server_line = 1;	# 1 because 0 would be the <VirtualHost *> line
+	for my $i (0 .. $#config) { 
+		if ($config[$i] =~ /ServerAlias (.+)/) {
+			chomp($config[$i]);
+			$config[$i] = "$config[$i] $alias\n";
+			$alias_line = $i;
+		}
+		if ($config[$i] =~ /ServerName (.+)/) {
+			$server_line = $i;
+		}
+	}
+
+	# if no ServerAlias, add one after $server_line
+	if (!$alias_line) {
+		my $server_alias = "ServerAlias $alias\n";
+		splice @config, $server_line, 0, $server_alias; 
+	}
+
+	print "[DEBUG] printing \@config arrary..\n@config\n" if $self->getDebug();
+
+	# write the config out
+	open VHOST, '>', $vhost_dir."/$domain";
+
+	foreach my $line (@config) {
+		print VHOST $line;
+	}	
+
+	close VHOST;
+
+	return 1;
+
+}
 
 sub addSite {
 	my ($self, $domain, $ip_addr) = @_;
