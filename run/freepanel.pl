@@ -1,25 +1,37 @@
 #!/usr/bin/perl
 
-use FreePanel;
-use lib '../modules/admin';
-use control;
+use strict;
+use warnings;
 
-my $control = new FreePanel::Control();
+use FreePanel;
+use Template;
+use FindBin qw($Bin);
+
+my $tt = Template->new({
+	INCLUDE_PATH => './templates',
+	INTERPOLATE => 1,
+}) or die "$Template::ERROR\n";
 
 my $app = FreePanel->new(
-    map => {
-        home => {
-            plugin => 'Home',
-	    methods => [ qw/ default go / ],
+    
+    PLUGINS => [ @INC, $Bin ],
+    
+    404     => 'FreePanel::Plugin::My404',
+    AUTH    => 'FreePanel::Plugin::MyAuth',
 
-        },
-        root => {
-            plugin => 'Home',
-	    methods => [ qw/ default go /],
-        },
-    },
-    control => $control,
 );
 
-$app->setup();
+$app->stash(
+    #config => FreePanel::Config->getConfigs(),
+	tt		=> $tt,
+);
 
+$app->dispatch(
+
+    root => {
+        plugin => 'FreePanel::Plugin::Status',
+        methods => [qw/ default /],
+    },
+);
+$app->setup;
+    

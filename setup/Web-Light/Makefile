@@ -1,4 +1,4 @@
-# This Makefile is for the FreePanel extension to perl.
+# This Makefile is for the Web::Light extension to perl.
 #
 # It was generated automatically by MakeMaker version
 # 6.42 (Revision: 41145) from the contents of
@@ -10,14 +10,14 @@
 #
 #   MakeMaker Parameters:
 
-#     ABSTRACT_FROM => q[lib/FreePanel.pm]
+#     ABSTRACT_FROM => q[lib/Web/Light.pm]
 #     AUTHOR => q[Michael Kroher <mkroher@gmail.com>]
 #     LICENSE => q[perl]
-#     NAME => q[FreePanel]
+#     NAME => q[Web::Light]
 #     PL_FILES => {  }
 #     PREREQ_PM => { Test::More=>q[0] }
-#     VERSION_FROM => q[lib/FreePanel.pm]
-#     clean => { FILES=>q[FreePanel-*] }
+#     VERSION_FROM => q[lib/Web/Light.pm]
+#     clean => { FILES=>q[Web-Light-*] }
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
 
 # --- MakeMaker post_initialize section:
@@ -56,8 +56,8 @@ VENDORLIBEXP = /usr/lib/perl5/vendor_perl/5.10.0
 AR_STATIC_ARGS = cr
 DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
-NAME = FreePanel
-NAME_SYM = FreePanel
+NAME = Web::Light
+NAME_SYM = Web_Light
 VERSION = 0.01
 VERSION_MACRO = VERSION
 VERSION_SYM = 0_01
@@ -145,11 +145,11 @@ MM_REVISION = 41145
 # PARENT_NAME = NAME without BASEEXT and no trailing :: (eg Foo::Bar)
 # DLBASE  = Basename part of dynamic library. May be just equal BASEEXT.
 MAKE = make
-FULLEXT = FreePanel
-BASEEXT = FreePanel
-PARENT_NAME = 
+FULLEXT = Web/Light
+BASEEXT = Light
+PARENT_NAME = Web
 DLBASE = $(BASEEXT)
-VERSION_FROM = lib/FreePanel.pm
+VERSION_FROM = lib/Web/Light.pm
 OBJECT = 
 LDFROM = $(OBJECT)
 LINKTYPE = dynamic
@@ -161,14 +161,14 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = lib/FreePanel.pm
+MAN3PODS = lib/Web/Light.pm
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
 
 # Where to build things
-INST_LIBDIR      = $(INST_LIB)
-INST_ARCHLIBDIR  = $(INST_ARCHLIB)
+INST_LIBDIR      = $(INST_LIB)/Web
+INST_ARCHLIBDIR  = $(INST_ARCHLIB)/Web
 
 INST_AUTODIR     = $(INST_LIB)/auto/$(FULLEXT)
 INST_ARCHAUTODIR = $(INST_ARCHLIB)/auto/$(FULLEXT)
@@ -183,10 +183,10 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = lib/FreePanel.pm
+TO_INST_PM = lib/Web/Light.pm
 
-PM_TO_BLIB = lib/FreePanel.pm \
-	blib/lib/FreePanel.pm
+PM_TO_BLIB = lib/Web/Light.pm \
+	blib/lib/Web/Light.pm
 
 
 # --- MakeMaker platform_constants section:
@@ -252,8 +252,8 @@ CI = ci -u
 RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
-DISTNAME = FreePanel
-DISTVNAME = FreePanel-0.01
+DISTNAME = Web-Light
+DISTVNAME = Web-Light-0.01
 
 
 # --- MakeMaker macro section:
@@ -406,9 +406,9 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	lib/FreePanel.pm
+	lib/Web/Light.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  lib/FreePanel.pm $(INST_MAN3DIR)/FreePanel.$(MAN3EXT) 
+	  lib/Web/Light.pm $(INST_MAN3DIR)/Web::Light.$(MAN3EXT) 
 
 
 
@@ -451,7 +451,7 @@ clean :: clean_subdirs
 	  perl.exe so_locations \
 	  $(BASEEXT).exp 
 	- $(RM_RF) \
-	  blib FreePanel-* 
+	  Web-Light-* blib 
 	- $(MV) $(FIRST_MAKEFILE) $(MAKEFILE_OLD) $(DEV_NULL)
 
 
@@ -473,9 +473,9 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '--- #YAML:1.0' > META_new.yml
-	$(NOECHO) $(ECHO) 'name:                FreePanel' >> META_new.yml
+	$(NOECHO) $(ECHO) 'name:                Web-Light' >> META_new.yml
 	$(NOECHO) $(ECHO) 'version:             0.01' >> META_new.yml
-	$(NOECHO) $(ECHO) 'abstract:            Open-source system administration tool.' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract:            Light weight web framework' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license:             perl' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:              ' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - Michael Kroher <mkroher@gmail.com>' >> META_new.yml
@@ -778,7 +778,7 @@ testdb_static :: testdb_dynamic
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="0,01,0,0">' > $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <TITLE>$(DISTNAME)</TITLE>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>Open-source system administration tool.</ABSTRACT>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>Light weight web framework</ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Michael Kroher &lt;mkroher@gmail.com&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Test-More" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
@@ -793,7 +793,7 @@ ppd :
 
 pm_to_blib : $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', '\''$(PM_FILTER)'\'')' -- \
-	  lib/FreePanel.pm blib/lib/FreePanel.pm 
+	  lib/Web/Light.pm blib/lib/Web/Light.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 

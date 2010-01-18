@@ -3,10 +3,10 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-    NAME                => 'FreePanel',
+    NAME                => 'Web::Light',
     AUTHOR              => 'Michael Kroher <mkroher@gmail.com>',
-    VERSION_FROM        => 'lib/FreePanel.pm',
-    ABSTRACT_FROM       => 'lib/FreePanel.pm',
+    VERSION_FROM        => 'lib/Web/Light.pm',
+    ABSTRACT_FROM       => 'lib/Web/Light.pm',
     ($ExtUtils::MakeMaker::VERSION >= 6.3002
       ? ('LICENSE'=> 'perl')
       : ()),
@@ -15,5 +15,5 @@ WriteMakefile(
         'Test::More' => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean               => { FILES => 'FreePanel-*' },
+    clean               => { FILES => 'Web-Light-*' },
 );

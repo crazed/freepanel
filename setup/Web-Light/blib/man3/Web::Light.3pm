@@ -131,73 +131,161 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "FreePanel 3"
-.TH FreePanel 3 "2010-01-17" "perl v5.10.0" "User Contributed Perl Documentation"
+.IX Title "Web::Light 3"
+.TH Web::Light 3 "2010-01-17" "perl v5.10.0" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-FreePanel \- Open\-source system administration tool.
+Web::Light \- Light weight web framework
 .SH "VERSION"
 .IX Header "VERSION"
 Version 0.01
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-Quick summary of what the module does.
+Subclass Web::Light
 .PP
-Perhaps a little code snippet.
+.Vb 3
+\&    package MyApp;
+\&    use base qw/ Web::Light /;
+\&    1;
+.Ve
 .PP
-.Vb 1
-\&    use FreePanel;
-\&
-\&    my $app = FreePanel\->new();
+Then later...
+.PP
+.Vb 5
+\&    use Mypp;
+\&    my $app = MyApp\->new();
+\&    $app\->stash();
 \&    $app\->dispatch();
 \&    $app\->setup();
 .Ve
-.SH "EXPORT"
-.IX Header "EXPORT"
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-.SH "FUNCTIONS"
-.IX Header "FUNCTIONS"
-.Sh "function1"
-.IX Subsection "function1"
-.Sh "function2"
-.IX Subsection "function2"
+.SH "Description"
+.IX Header "Description"
+Web::Light is a light-weight web framework.  It's basically just a wrapper around 
+HTTP::Engine::Middleware, and does some stuff to handle plugins.  If you are 
+looking for a more tested, developed, and supported web framework, consider using Catalyst.
+.PP
+Web::Light by default launches a stand alone web server that you can connect to with your 
+browser. Since Web::Light can do whatever HTTP::Engine can, you can specify different 
+interfaces like ServerSimple and FastCGI.
+.SH "Usage"
+.IX Header "Usage"
+.ie n .Sh "new( $args )"
+.el .Sh "new( \f(CW$args\fP )"
+.IX Subsection "new( $args )"
+Creates a Web::Light instance.
+.PP
+.Vb 3
+\&    new(
+\&       PLUGINS => [ @INC, \*(Aq./\*(Aq ],
+\&    );
+.Ve
+.PP
+Define the location of plugins to load. This just passes a list to Module::Find's 
+\&\fIsetmoduledirs()\fR method.
+.PP
+.Vb 3
+\&    new(
+\&       404 => \*(AqMyApp::Plugin::My404\*(Aq,
+\&    );
+.Ve
+.PP
+Assign a custom 404 plugin to use.
+.PP
+.Vb 3
+\&    new(
+\&       AUTH => \*(AqMyApp::Plugin::MyAuth\*(Aq,
+\&    );
+.Ve
+.PP
+Assign which plugin to use for authentication. See \fIdispatch()\fR on how to 
+incorporate authentication.
+.ie n .Sh "dispatch( $args )"
+.el .Sh "dispatch( \f(CW$args\fP )"
+.IX Subsection "dispatch( $args )"
+Define how URLs get dispatched.
+.PP
+.Vb 12
+\&    dispatch(
+\&       root => {
+\&            plugin  => \*(AqMyApp::Plugin::Root\*(Aq,
+\&            methods => [qw/ default hello /],
+\&            session => [],
+\&       },
+\&       home => {
+\&            plugin  => \*(AqMyApp::Plugin::CoolHome,
+\&            methods => [qw/ default /],
+\&            session => [qw/ username /],
+\&       },
+\&    );
+.Ve
+.PP
+The list of methods are the methods that are availabe to the web. 
+The above will dispatch http://localhost/hello to the 
+\&'hello' subroutine defined in MyApp::Plugin::Root
+.PP
+If 'session' contains a list, this forces Web::Light to check if
+the variables in that list *are* set. If they aren't, the '\s-1AUTH\s0' 
+plugin that was defined with \fInew()\fR will be forced.
+.ie n .Sh "stash( $args )"
+.el .Sh "stash( \f(CW$args\fP )"
+.IX Subsection "stash( $args )"
+Just a simple hash ref to pass around stuff to your plugins.
+.PP
+.Vb 5
+\&    use Template;
+\&    my $tt = Template\->new;
+\&    $app\->stash(
+\&        tt => $tt,
+\&    );
+.Ve
+.PP
+Then in your plugin..
+.PP
+.Vb 1
+\&    package MyApp::Plugin::Cool
+\&
+\&    sub default {
+\&        my ($self,$app) = @_;
+\&        my $tt = $app\->{stash}{tt};
+\&
+\&    }
+.Ve
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Michael Kroher, \f(CW\*(C`<mkroher at gmail.com>\*(C'\fR
 .SH "BUGS"
 .IX Header "BUGS"
-Please report any bugs or feature requests to \f(CW\*(C`bug\-freepanel at rt.cpan.org\*(C'\fR, or through
-the web interface at <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=FreePanel>.  I will be notified, and then you'll
+Please report any bugs or feature requests to \f(CW\*(C`bug\-web\-light at rt.cpan.org\*(C'\fR, or through
+the web interface at <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Web\-Light>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 .SH "SUPPORT"
 .IX Header "SUPPORT"
 You can find documentation for this module with the perldoc command.
 .PP
 .Vb 1
-\&    perldoc FreePanel
+\&    perldoc Web::Light
 .Ve
 .PP
 You can also look for information at:
 .IP "\(bu" 4
 \&\s-1RT:\s0 \s-1CPAN\s0's request tracker
 .Sp
-<http://rt.cpan.org/NoAuth/Bugs.html?Dist=FreePanel>
+<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Web\-Light>
 .IP "\(bu" 4
 AnnoCPAN: Annotated \s-1CPAN\s0 documentation
 .Sp
-<http://annocpan.org/dist/FreePanel>
+<http://annocpan.org/dist/Web\-Light>
 .IP "\(bu" 4
 \&\s-1CPAN\s0 Ratings
 .Sp
-<http://cpanratings.perl.org/d/FreePanel>
+<http://cpanratings.perl.org/d/Web\-Light>
 .IP "\(bu" 4
 Search \s-1CPAN\s0
 .Sp
-<http://search.cpan.org/dist/FreePanel/>
+<http://search.cpan.org/dist/Web\-Light/>
 .SH "ACKNOWLEDGEMENTS"
 .IX Header "ACKNOWLEDGEMENTS"
 .SH "COPYRIGHT & LICENSE"

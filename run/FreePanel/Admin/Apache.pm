@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-package admin::apache;
+package FreePanel::Admin::Apache;
 use strict;
 use warnings;
-use config;
-use base qw/ admin::config /;
-use __PACKAGE__->CONSTANT();
+use Exporter;
+use FreePanel::Config;
+use base qw/ FreePanel::Config /;
 
 ###################### Class constructors ###################### 
 my $conf;
@@ -22,13 +22,13 @@ sub new
 sub addServerAlias {
 	my ($self, $domain, $alias_array) = @_;
 
-	$self->log("variable: alias_array: @$alias_array\n", VARIABLE);
+	$self->logger("function: addServerAlias($domain,$alias_array)", $self->FUNC_CALL);
+	$self->logger("variable: \@\$alias_array: @$alias_array", $self->VARIABLE);
 
 	# make sure the cofnig file exists
 	if (!$self->checkVhost($domain)) {
 
-		$self->log("function call: checkVhost($domain)\n", FUNC_CALL);
-		$self->log("$domain configuration does not exist.\n", ERROR);
+		$self->logger("$domain configuration does not exist.", $self->ERROR);
 		return 0;
 	}
 
@@ -38,11 +38,9 @@ sub addServerAlias {
 	}
 	$alias =~ s/\s+$//; # remove trailing space if any
 
-	print "[DEBUG] aliases: $alias\n" if $self->getDebug();
-
 	# load the domain config into an array
 	my $vhost_dir = $self->getVhostDir();
-	open VHOST, '<', $vhost_dir."/$domain";
+	open VHOST, '<', $vhost_dir."/$domain" or die "FATAL: $vhost_dir/$domain $!";
 	my @config = <VHOST>;
 	close VHOST;
 
@@ -66,7 +64,7 @@ sub addServerAlias {
 		splice @config, $server_line, 0, $server_alias; 
 	}
 
-	print "[DEBUG] printing \@config arrary..\n@config\n" if $self->getDebug();
+	$self->logger("variable: \@config: \n@config", $self->VARIABLE);
 
 	# write the config out
 	open VHOST, '>', $vhost_dir."/$domain";
@@ -83,13 +81,14 @@ sub addServerAlias {
 
 sub addSite {
 	my ($self, $domain, $ip_addr) = @_;
+	$self->logger("function: addSite($domain, $ip_addr) called.", $self->FUNC_CALL);
 
-	# add some sort of error checking function here
 
 	if ($self->checkVhost($domain)) {
-		print "[!]: vhost config already exists for $domain.\n";
+		$self->logger("vhost config already exists for $domain.", $self->ERROR);
 		return 0;
 	}
+
 	my $vhost_dir = $self->getVhostDir();
 	my $vhost_templ = $self->getVhostTemplate();
 
@@ -119,9 +118,10 @@ sub addSite {
 
 sub addWebDir {
 	my ($self, $domain) = @_;
+	$self->logger("function: addWebDir($domain)", $self->FUNC_CALL);
 	
 	if ($self->checkWebDir($domain)) {
-		print "[!]: web directory already exists for $domain.\n" if $self->{debug};
+		$self->logger("web directory already exists for $domain while tryingn to add one.", $self->ERROR);
 		return 0;
 	}
 
@@ -140,11 +140,11 @@ sub addWebDir {
 	return 1;
 }
 sub removeSite {
-	my ($self, $domain, $remove_dir) = @_;
+	my ($self, $domain) = @_;
+	$self->logger("removeSite($domain)", $self->FUNC_CALL);
 	my $vhost_dir = $self->getVhostDir();
 	my $web_dir = $self->getWebDir();
 	my $err = 1;
-	# add some sort of error checking function here
 
 	# remove vhost file
 	if ($self->checkVhost($domain)) {
@@ -152,29 +152,31 @@ sub removeSite {
 		return 1;
 	}
 
-	print "[!]: no vhost configuration exists for $domain.\n";
+	$self->logger("no vhost configuration exists for $domain while tryig to remove one.", $self->ERROR);
 	return 0;
 }
 
 sub removeWebDir {
 	my ($self, $domain) = @_;
+	$self->logger("function: removeWebDir($domain)", $self->FUNC_CALL);
 	my $web_dir = $self->getWebDir();
 
 	if ($self->checkWebDir($domain)) {
 		system ('rm', '-rf', $web_dir."/$domain");
 		return 1;
 	}
-	print "[!]: no web dir exsists for $domain.\n" if $self->{debug};
+	$self->logger("no web dir exsists for $domain while trying to remove one.", $self->ERROR);
 	return 0;
 }
 
 sub disableSite {
 	my ($self, $domain) = @_;
+	$self->logger("function: disableSite($domain)", $self->FUNC_CALL);
 	my $inactive_dir = $self->getInactiveDir();
 	my $vhost_dir = $self->getVhostDir();
 
 	if (!$self->checkVhost($domain)) {
-		print "[!]: no configuration file for $domain.\n";
+		$self->logger("no configuration file for $domain found while trying to disable the site.", $self->ERROR);
 		return 0;
 
 	}
@@ -187,16 +189,17 @@ sub disableSite {
 
 sub enableSite {
 	my ($self, $domain) = @_;
+	$self->logger("function: enableSite($domain)", $self->FUNC_CALL);
 	my $inactive_dir = $self->getInactiveDir();
 	my $vhost_dir = $self->getVhostDir();
 	
 	if ($self->checkVhost($domain)) {
-		print "[!]: site configuration ($domain) is already in proper directory.\n";
+		$self->logger("site configuration file for $domain is already in proper directory.", $self->ERROR);
 		return 0;
 	} 
 
 	if (!$self->checkInactive($domain)) {
-		print "[!]: $domain does not exist.\n";
+		$self->logger("$domain does not exist while trying to enable site.", $self->ERROR);
 		return 0;
 	}
 
@@ -208,13 +211,15 @@ sub enableSite {
 
 sub restart {
 	my ($self) = @_;
-	print "[*]: Apache is being restarted\n" if $self->getDebug;
+	$self->logger("function: restart (apache)", $self->FUNC_CALL);
+	$self->logger("Apache is being restarted.", $self->INFO);
 	return 1;
 }
 
 ###################### Check functions ###################### 
 sub checkVhost {
 	my ($self, $domain) = @_;
+	$self->logger("function: checkVhost($domain)", $self->FUNC_CALL);
 	my $vhost_dir = $self->getVhostDir();
 
 	# see if a configuration file exists 
@@ -223,6 +228,7 @@ sub checkVhost {
 
 sub checkInactive {
 	my ($self, $domain) = @_;
+	$self->logger("function: checkInactive($domain)", $self->FUNC_CALL);
 	my $inactive_dir = $self->getInactiveDir();
 
 	# see if a configuration exists
@@ -231,6 +237,7 @@ sub checkInactive {
 
 sub checkWebDir {
 	my ($self, $domain) = @_;
+	$self->logger("function: checkWebDir($domain)", $self->FUNC_CALL);
 	my $web_dir = $self->getWebDir();
 
 	return -d "$web_dir/$domain";
