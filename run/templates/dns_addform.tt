@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>New Site Form</title>
+<link rel="stylesheet" type="text/css" href="form.css" />
+<style>
+<!--
+form { 
+        background-color: #CCCCCC;
+        color: #000000;
+        border: 1px solid #999999;
+                padding: 8px;
+                width: 300px;
+        font-size: 10px;
+        text-align: right;
+}
+h1 {
+                text-align: center;
+}
+-->
+</style>
+</head>
+<body>
+<div id="content">
+
+	<form action="dns/add" method="post">
+	<h1>New Zone Form</h1>
+	<fieldset>
+	<legend>New Zone</legend>
+	<label>Owner
+	<input type="text" name="owner" />
+	</label>
+	<label>Domain
+	<input type="text" name="domain" />
+	</label>
+	<label>IP Address
+	<input type="text" name="ip_addr" />
+	</label>
+	</fieldset>
+	<input type="submit" value="Submit" />
+	</form>
+
+</div>
+</body>
+</html>
