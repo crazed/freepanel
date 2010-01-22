@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 package FreePanel::Admin::Nsd;
 use FreePanel::Config;
+use DNS::ZoneParse;
 use strict;
+use warnings;
 use base qw(FreePanel::Config);
 sub new
 {
@@ -39,12 +41,12 @@ sub logIt{
 # addDomain("domain.com")			#
 #	returns 1 on success, 0 on fail		#
 #///////////////////////////////////////////////#
-sub addDomain {
+sub addZone {
 	my ($self, $domain, $ip_addr) = @_;
 	$self->logger("function: addDomain($domain, $ip_addr) called.", $self->FUNC_CALL);
 
 	# check for errors
-	if (checkDomains($self, $domain) != 1) {
+	if (checkZone($self, $domain) != 1) {
 		return 0;
 	}
 
@@ -52,7 +54,6 @@ sub addDomain {
 		$year, $wday, $yday, $isdst)=localtime(time);
 	my $serial = sprintf("%4d%02d%02d00",
 		$year+1900,$mon+1,$mday);
-	$self->logger("  Serial: $serial\n") if $self->getDebug();	
 
 	# add to nsd.conf
 	open (NSD, '>>', $self->getNsdConfig());
@@ -63,7 +64,7 @@ sub addDomain {
 
 	close NSD;
 
-	$self->logger("added $domain to $self->getNsdConfig.", $self->INFO);
+	$self->logger("added $domain to ".$self->getNsdConfig.".", $self->INFO);
 
 	# create zone file
 	open(ZONE, '>', $self->getZoneDir()."/$domain");
@@ -130,7 +131,7 @@ sub removeDomain {
 	# if neither are defined, no match was found
 	if (!defined($start_delete)) {
 
-		$self->logger("$domain was not found in configuration file ($self->getNsdConfig).", $self->ERROR);
+		$self->logger("$domain was not found in configuration file (".$self->getNsdConfig.".).", $self->ERROR);
 		return 0;
 	}
 
@@ -157,9 +158,238 @@ sub removeDomain {
 
 	return 1;
 }
+sub delA {
+	my ($self, $domain, $name) = @_;
+	$self->logger("function: delA($domain, $name)", $self->FUNC_CALL);
+
+	# check that zone file exists
+	if (!$self->checkZone($domain)) {
+		return 0;
+	}
+
+	# set the zone file name
+	my $zonedb = $self->getZoneDir."/$domain";
+
+	# find $name in the zone file and remove it
+	my $zonefile = DNS::ZoneParse->new($zonedb);
+	my $a_records = $zonefile->a();
+
+	for my $i (0 .. $#$a_records) {
+		if (@$a_records[$i]->{name} eq $name) {
+			delete @$a_records[$i];
+		}
+	}
+
+	$zonefile->new_serial();
+
+	open my $fh, '>', $zonedb or die "FATAL: $zonedb: $!";
+	print $fh $zonefile->output();
+	close $fh;
+
+	$self->logger("A record for $name deleted from $domain.", $self->INFO);
+
+	return 1;
+}
+	
+	
+sub addA {
+        my ($self, $domain, $name, $host) = @_;
+	$self->logger("function: addA($domain, $name, $host)", $self->FUNC_CALL);
+
+	# check if zone file even exists
+	if (!$self->checkZone($domain)) {
+		return 0;
+	}
+
+	# make sure $name is valid and $host is a valid ip
+	if (!$self->validateName($name)) {
+		$self->logger("$name is not a valid name for DNS", $self->VARIABLE);
+		return 0;
+	}
+
+	if (!$self->validateHost($host)) {
+		$self->logger("$host is not a valid IP address", $self->VARIABLE);
+		return 0;
+	}
+
+        my $zonedb = $self->getZoneDir."/$domain";
+
+        my $zonefile = DNS::ZoneParse->new($zonedb);
+        my $a_records = $zonefile->a();
+
+        push (@$a_records, {
+                name    => $name,
+                class   => 'IN',
+                host    => $host,
+        });
+
+        $zonefile->new_serial();
+
+        open my $fh, '>', $zonedb or die "FATAL: $zonedb: $!";
+        print $fh $zonefile->output();
+        close $fh;
+
+	$self->logger("$name IN AN $host added to $domain.", $self->INFO);
+
+        return 1;
+}
+
+sub addMX {
+        my ($self, $domain, $name, $host, $priority) = @_;
+	$self->logger("function: addMX($domain, $name, $host, $priority)", $self->FUNC_CALL);
+
+	# check zone file even exists
+	if (!$self->checkZone($domain)) {
+		return 0;
+	}
+
+	# mx records don't use IP addresses, both must be names
+        if (!$self->validateName($name) or !$self->validateName($host)) {
+                $self->logger("$name is not a valid name for DNS", $self->VARIABLE);
+                return 0; 
+        }
+
+        my $zonedb = $self->getZoneDir."/$domain";
+
+        my $zonefile = DNS::ZoneParse->new($zonedb);
+        my $mx_records = $zonefile->mx();
+
+	# need some validation for $name and $host
+	# checkHost(), checkName() ?, useful in all record subs
+
+        push (@$mx_records, {
+                host            => $host,
+                priority        => $priority,
+                name            => $name,
+        });
+
+        $zonefile->new_serial();
+
+        open my $fh, '>', $zonedb or die "FATAL: $zonedb: $!";
+        print $fh $zonefile->output();
+        close $fh;
+
+	$self->logger("$name IN MX $priority $host added to $domain.", $self->INFO);
+
+        return 1;
+}
+
+sub delMX {
+	my ($self, $domain, $host) = @_;
+	$self->logger("function: delMX($domain, $host)", $self->FUNC_CALL);
+
+	# check if the zone file exists
+	if (!$self->checkZone($domain)) {
+		return 0;
+	}
+
+	# set the zone file name
+	my $zonedb = $self->getZoneDir."/$domain";
+
+	# find $host in zone file and remove it
+	my $zonefile = DNS::ZoneParse->new($zonedb);
+	my $mx_records = $zonefile->mx();
+
+	for my $i (0 .. $#$mx_records) {
+		if (@$mx_records[$i]->{host} eq $host) {
+			delete @$mx_records[$i];
+		}
+	}
+
+	$zonefile->new_serial();
+
+	open my $fh, '>', $zonedb or die "FATAL: $zonedb: $!";
+	print $fh $zonefile->output();
+	close $fh;
+
+	$self->logger("MX record for $host delete from $domain.", $self->INFO);
+
+	return 1;
+
+}
+
+sub delTXT {
+	my ($self, $domain, $text) = @_;
+	$self->logger("function: delTXT($domain, $text)", $self->FUNC_CALL);
+
+	# check if the zone file exists
+	if (!$self->checkZone($domain)) {
+		return 0;
+	}
+
+	# set the zone file name
+	my $zonedb = $self->getZoneDir."/$domain";
+
+	# find $text in zone file and remove it
+	my $zonefile = DNS::ZoneParse->new($zonedb);
+	my $txt_records = $zonefile->txt();
+
+	for my $i (0 .. $#$txt_records) {
+		if (@$txt_records[$i]->{text} eq $text) {
+			delete @$txt_records[$i];
+		}
+	}
+
+	$zonefile->new_serial();
+
+	open my $fh, '>', $zonedb or die "FATAL: $zonedb: $!";
+	print $fh $zonefile->output();
+	close $fh;
+
+	$self->logger("TXT record for $text delete from $domain.", $self->INFO);
+
+	return 1;
+
+}
+
+sub addTXT {
+        my ($self, $domain, $name, $text) = @_;
+	$self->logger("function: addTXT($domain, $name, $text)", $self->FUNC_CALL);
+
+	# check if zone file even exists
+	if (!$self->checkZone($domain)) {
+		return 0;
+	}
+
+	if (!$self->validateName($name)) {
+		$self->logger("$name is not a valid name for DNS", $self->VARIABLE);
+		return 0;
+	}
+
+        my $zonedb = $self->getZoneDir."/$domain";
+
+        my $zonefile = DNS::ZoneParse->new($zonedb);
+        my $txt_records = $zonefile->txt();
+
+        push (@$txt_records, {
+                name    => $name,
+                class   => 'IN',
+                text    => $text,
+        });
+
+	$zonefile->new_serial();
+
+	open my $fh, '>', $zonedb or die "FATA: $zonedb: $!";
+	print $fh $zonefile->output();
+	close $fh;
+
+	$self->logger("$name IN TXT $text added to $domain.", $self->INFO);
+
+        return 1;
+}
+
+sub validateName {
+	my ($self, $name) = @_;
+	return $name =~ /^([-@.a-z0-9]+)$/;
+}
+sub validateHost {
+	my ($self, $host) = @_;
+	return $host =~ /^(\d+)(\.\d+){3}$/;
+}
+
 
 #///////////////////////////////////////////////#
-# checkDomains("domain.com")			#
+# checkZone("domain.com")			#
 #	returns 1 on success, 0 on fail		#
 #///////////////////////////////////////////////#
 	## possible outcomes:
@@ -168,21 +398,21 @@ sub removeDomain {
 	#	-1, zone file does not exist
 	#	-2, zone file and config file missing
 
-sub checkDomains {
+sub checkZone {
 	my ($self, $domain) = @_;
-	$self->logger("function: checkDomains($domain) called.", $self->FUNC_CALL);
+	$self->logger("function: checkZone($domain) called.", $self->FUNC_CALL);
 	my $err = 1;
 
 	# domain can only have '-', a-z, 0-9. 
 	# must have at least 2 letters for tld
 	if ($domain !~ /^([-a-z0-9]+\.[a-z]{2,})/) {
-		$self->logger("$domain is not a valid domain.", $self->WARNING);			
+		$self->logger("$domain is not a valid domain.", $self->ERROR);			
 		return 0;
 	}
 	
 	# verify the zone doesn't already exist
 	if (-e $self->getZoneDir()."/$domain") {
-		$self->logger("$domain zone file exists already", $self->WARNING);
+		$self->logger("$domain zone file exists already", $self->FULL_DEBUG);
 		$err = -1;
 	}
 
@@ -193,7 +423,7 @@ sub checkDomains {
 		#print $_;
 		chomp ($_);
 		if ($_ =~ /name\: \"$domain\"/) {
-			$self->logger("$domain exists in " . $self->getNsdConfig() . " configuration file", $self->WARNING);
+			$self->logger("$domain exists in " . $self->getNsdConfig() . " configuration file", $self->FULL_DEBUG);
 			$err--;
 		}	
 	}

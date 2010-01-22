@@ -21,17 +21,33 @@ my $app = FreePanel->new(
 
 );
 
+my $admin = FreePanel::Admin->new();
+
 $app->stash(
     #config => FreePanel::Config->getConfigs(),
 	tt		=> $tt,
+	admin		=> $admin,
 );
 
 $app->dispatch(
 
     root => {
-        plugin => 'FreePanel::Plugin::Status',
-        methods => [qw/ default /],
+        #plugin => 'FreePanel::Plugin::Status',
+		plugin => 'FreePanel::Plugin::NewSite',
+        methods => [qw/ default go /],
     },
+	new => {
+		plugin	=> 'FreePanel::Plugin::NewSite',
+		methods	=> [qw/ default go /],
+	},
+	status => {
+		plugin => 'FreePanel::Plugin::Status',
+		methods => [qw/ default /],
+	},
+	dns => {
+		plugin => 'FreePanel::Plugin::DNS',
+		methods => [qw/ default add /],
+	},
 );
 $app->setup;
     

@@ -20,7 +20,7 @@ sub new
 {
 	my $class = shift;
 	my $self = { 
-		config_file	=> '/etc/freepanel/freepanel.conf',
+		config_file	=> '/home/crazed/freepanel/freepanel/freepanel.conf',
 	};
 
 	%configs = getConfigs($self->{config_file});

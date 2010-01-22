@@ -9,43 +9,43 @@ sub default {
 	my $tt = $app->{stash}{tt};
 	my $param = $app->{req}->parameters;
 
-	my $config = FreePanel::Config->new();
+	my $admin = FreePanel::Admin->new();
 
-	#my $dump = Dumper($config->getConfigs());
+	#my $dump = Dumper($admin->getConfigs());
 
 	#my $vars = { hash => $dump };
 
 	#$tt->process('example.tt', $vars, \my $out);
 
-	my $maildb = $config->getMailDbConfig;
+	my $maildb = $admin->getMailDbConfig;
 	my $vars = {
-		http_service		=> $config->getHttpService,
-		mail_service		=> $config->getMailService,
-		name_service		=> $config->getNameService,
-		debug_level			=> $config->getDebug,
-		log_file			=> $config->getLogFile,
-		vhost_template		=> $config->getVhostTemplate,
-		vhost_dir			=> $config->getVhostDir,
-		inactive_dir		=> $config->getInactiveDir,
-		web_dir				=> $config->getWebDir,
-		http_uid			=> $config->getHttpUID,
-		http_gid			=> $config->getHttpGID,
-		zone_dir			=> $config->getZoneDir,
-		zone_template		=> $config->getZoneTemplate,
-		nsd_config			=> $config->getNsdConfig,
-		mysql_host			=> $maildb->{mysql_host},
-		mysql_port			=> $maildb->{mysql_port},
-		mysql_user			=> $maildb->{mysql_user},
-		mysql_pass			=> $maildb->{mysql_pass},
-		mysql_db			=> $maildb->{mysql_db},
-		user_table			=> $maildb->{user_table},
+		http_service		=> $admin->getHttpService,
+		mail_service		=> $admin->getMailService,
+		name_service		=> $admin->getNameService,
+		debug_level		=> $admin->getDebug,
+		log_file		=> $admin->getLogFile,
+		vhost_template		=> $admin->getVhostTemplate,
+		vhost_dir		=> $admin->getVhostDir,
+		inactive_dir		=> $admin->getInactiveDir,
+		web_dir			=> $admin->getWebDir,
+		http_uid		=> $admin->getHttpUID,
+		http_gid		=> $admin->getHttpGID,
+		zone_dir		=> $admin->getZoneDir,
+		zone_template		=> $admin->getZoneTemplate,
+		nsd_config		=> $admin->getNsdConfig,
+		mysql_host		=> $maildb->{mysql_host},
+		mysql_port		=> $maildb->{mysql_port},
+		mysql_user		=> $maildb->{mysql_user},
+		mysql_pass		=> $maildb->{mysql_pass},
+		mysql_db		=> $maildb->{mysql_db},
+		user_table		=> $maildb->{user_table},
 		domain_table		=> $maildb->{domain_table},
-		alias_table			=> $maildb->{alias_table},
+		alias_table		=> $maildb->{alias_table},
 		
 	};
 
 	$tt->process('example.tt', $vars, \my $out);
-	$config->logger("Status: site was access :) ZOMG LOGS", $config->INFO);
+	$admin->logger("Status: site was access :) ZOMG LOGS", $admin->INFO);
 
 	return $out;
 		
