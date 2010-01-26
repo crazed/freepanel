@@ -6,8 +6,9 @@ use warnings;
 use FreePanel;
 use Template;
 
-##### Set your doman for sessions ####
-my $domain = 'perlmovement.org';
+##### CHANGE ME ######################
+my $domain = 'example.org';
+my $docroot = '/change/this/';
 ######################################
 
 
@@ -61,7 +62,7 @@ $app->setup(
     },
     static => {
         regexp => qr{^/(robots.txt|favicon.ico|(?:skins|css|js|images)/.+)$},
-        docroot => '/usr/home/infrared/dev/freepanel/run/',
+        docroot => $docroot,
     },
 );
 
