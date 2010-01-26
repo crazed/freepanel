@@ -15,7 +15,7 @@ sub default {
 
 	#my $vars = { hash => $dump };
 
-	#$tt->process('example.tt', $vars, \my $out);
+	#$tt->process('status.tt', $vars, \my $out);
 
 	my $maildb = $admin->getMailDbConfig;
 	my $vars = {
@@ -44,7 +44,7 @@ sub default {
 		
 	};
 
-	$tt->process('example.tt', $vars, \my $out);
+	$tt->process('status.tt', $vars, \my $out);
 	$admin->logger("Status: site was access :) ZOMG LOGS", $admin->INFO);
 
 	return $out;
