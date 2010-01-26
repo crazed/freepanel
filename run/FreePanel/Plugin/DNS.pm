@@ -46,21 +46,45 @@ sub add {
 		$tt->process('dns_addform.tt', $vars, \my $out);
 		return $out;
 	}
+	
+	# set the submitted vars
+	$vars->{owner} = $param->{owner};
+	$vars->{ip_addr} = $param->{ip_addr};
+	$vars->{domain} = $param->{domain};
+
+	# check for blank fields
+	my $err = 0;
+	if (!$param->{owner}) {
+		$vars->{error_owner} = "Owner cannot be blank.";
+		$err = 1;
+	}
+	if (!$param->{ip_addr}) {
+		$vars->{error_ip} = "IP address cannot be blank.";
+		$err = 1;
+	}
+	if (!$param->{domain}) {
+		$vars->{error_domain1} = "Domain cannot be blank.";
+		$err = 1;
+	}
 
 	# process data
 	my $admin = $app->{stash}{admin};
 	my $dns = $admin->getDnsObj();
-	my $err;
+	my $check = $dns->getValidateObj();
 
-	$vars->{domain} = $param->{domain};
-	$vars->{ip_addr} = $param->{ip_addr};
-
-	if (!$dns->checkDomain($param->{domain})) {
-		$vars->{error_domain} = "$param->{domain} is not a valid domain.";
+	#if (!$dns->checkZone($param->{domain})) {
+	if (!$check->is_validDomain($param->{domain}) && $param->{domain}) {
+		$vars->{error_domain1} = "$param->{domain} is not a valid domain name.";
 		$err = 1;
 	}
 
-	if (!$dns->validateHost($param->{ip_addr})) {
+	if (!$check->is_newZoneFile($param->{domain}, $admin->getZoneDir) && $param->{domain}) {
+		$vars->{error_domain2} = "$param->{domain} already has a zone file.";
+		$err = 1;
+	}
+
+	#if (!$dns->validateHost($param->{ip_addr})) {
+	if (!$check->is_validHost($param->{ip_addr}) && $param->{ip_addr}) {
 		$vars->{error_ip} = "$param->{ip_addr} is not a valid host address.";
 		$err = 1;
 	}

@@ -26,12 +26,12 @@ h1 {
 <div id="content">
 
 	<form action="add" method="post">
-	<h1>New Zone Form</h1>
+	<h1>New Site Form</h1>
 	<div id="messages">
 		[% IF message.defined %]<p>[% message %]</p>[% END %]
 	</div>
 	<fieldset>
-	<legend>New Zone</legend>
+	<legend>New Site</legend>
 
 	<label>Owner
 	<input type="text" name="owner" value="[% owner %]" /><br />
@@ -54,9 +54,12 @@ h1 {
         </div>
         [% END %]
 
-	<label>IP Address
-	<input type="text" name="ip_addr" value="[% ip_addr %]" /><br />
+	<label>Aliases
+	<input type="text" name="ip_addr" value="[% aliases %]" /><br />
 	</label>
+	<div id="help">
+		aliases should be space separated
+	</div>
         [% IF error_ip.defined %]
         <div id="error">
                 [% error_ip %]

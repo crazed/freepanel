@@ -1,0 +1,7 @@
+First name: [% first_name %]<br />
+Last name: [% last_name %]<br />
+Email: [% email %]<br />
+Domain: [% domain %]<br />
+User: [% user %]<br />
+Password: [% password %]<br />
+access: [% access %]<br />

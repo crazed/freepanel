@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Exporter;
 use FreePanel::Config;
+use FreePanel::Validate::HTTP;
 use base qw/ FreePanel::Config /;
 
 ###################### Class constructors ###################### 
@@ -14,6 +15,7 @@ sub new
 	my $self = $class->SUPER::new();
 
 	bless $self, $class;
+	$self->setValidateObj(FreePanel::Validate::HTTP->new);
 
 	return $self;
 }
@@ -26,9 +28,13 @@ sub addServerAlias {
 	$self->logger("variable: \@\$alias_array: @$alias_array", $self->VARIABLE);
 
 	# make sure the cofnig file exists
-	if (!$self->checkVhost($domain)) {
+	my $vhost_dir = $self->getVhostDir();
+	my $check = $self->getValidateObj();
 
-		$self->logger("$domain configuration does not exist.", $self->ERROR);
+	if (!$check->is_active($domain, $vhost_dir)) {
+	#if (!$self->checkVhost($domain)) {
+
+		$self->logger("$domain configuration does not exist or is inactive.", $self->ERROR);
 		return 0;
 	}
 
@@ -39,7 +45,6 @@ sub addServerAlias {
 	$alias =~ s/\s+$//; # remove trailing space if any
 
 	# load the domain config into an array
-	my $vhost_dir = $self->getVhostDir();
 	open VHOST, '<', $vhost_dir."/$domain" or die "FATAL: $vhost_dir/$domain $!";
 	my @config = <VHOST>;
 	close VHOST;
@@ -83,14 +88,15 @@ sub addSite {
 	my ($self, $domain, $ip_addr) = @_;
 	$self->logger("function: addSite($domain, $ip_addr) called.", $self->FUNC_CALL);
 
+        my $vhost_dir = $self->getVhostDir();
+        my $vhost_templ = $self->getVhostTemplate();
+	my $check = $self->getValidateObj();
 
-	if ($self->checkVhost($domain)) {
+	if ($check->is_active($domain, $vhost_dir)) {
+	#if ($self->checkVhost($domain)) {
 		$self->logger("vhost config already exists for $domain.", $self->ERROR);
 		return 0;
 	}
-
-	my $vhost_dir = $self->getVhostDir();
-	my $vhost_templ = $self->getVhostTemplate();
 
 	open (VHOST, '>', $vhost_dir."/$domain");
 	open (VHOST_T, '<', $vhost_templ);
@@ -119,16 +125,20 @@ sub addSite {
 sub addWebDir {
 	my ($self, $domain) = @_;
 	$self->logger("function: addWebDir($domain)", $self->FUNC_CALL);
+
+	my $check = $self->getValidateObj();
+	my $web_dir = $self->getWebDir();
 	
-	if ($self->checkWebDir($domain)) {
+	if (!$check->is_newWebDir($domain, $web_dir)) {
+	#if ($self->checkWebDir($domain)) {
 		$self->logger("web directory already exists for $domain while tryingn to add one.", $self->ERROR);
 		return 0;
 	}
 
 	my $uid = $self->getHttpUID();
 	my $gid = $self->getHttpGID();
-	my $base_dir = $self->getWebDir()."/$domain";
-	my @dirs = ($base_dir, $base_dir."/web");
+	my $base_dir = "$web_dir/$domain";
+	my @dirs = ($base_dir, "$base_dir/web");
 
 	for my $dir (@dirs) {
 		mkdir($dir, 0755);
@@ -144,10 +154,11 @@ sub removeSite {
 	$self->logger("removeSite($domain)", $self->FUNC_CALL);
 	my $vhost_dir = $self->getVhostDir();
 	my $web_dir = $self->getWebDir();
-	my $err = 1;
+	my $check = $self->getValidateObj();
 
 	# remove vhost file
-	if ($self->checkVhost($domain)) {
+	if ($check->is_active($domain, $vhost_dir)) {
+	#if ($self->checkVhost($domain)) {
 		unlink($vhost_dir."/$domain");
 		return 1;
 	}
@@ -160,9 +171,11 @@ sub removeWebDir {
 	my ($self, $domain) = @_;
 	$self->logger("function: removeWebDir($domain)", $self->FUNC_CALL);
 	my $web_dir = $self->getWebDir();
+	my $check = $self->getValidateObj();
 
-	if ($self->checkWebDir($domain)) {
-		system ('rm', '-rf', $web_dir."/$domain");
+	if (!$check->is_newWebDir($domain, $web_dir)) {
+	#if ($self->checkWebDir($domain)) {
+		system ('rm', '-rf', "$web_dir/$domain");
 		return 1;
 	}
 	$self->logger("no web dir exsists for $domain while trying to remove one.", $self->ERROR);
@@ -174,15 +187,17 @@ sub disableSite {
 	$self->logger("function: disableSite($domain)", $self->FUNC_CALL);
 	my $inactive_dir = $self->getInactiveDir();
 	my $vhost_dir = $self->getVhostDir();
+	my $check = $self->getValidateObj();
 
-	if (!$self->checkVhost($domain)) {
+	if (!$check->is_active($domain, $vhost_dir)) {
+	#if (!$self->checkVhost($domain)) {
 		$self->logger("no configuration file for $domain found while trying to disable the site.", $self->ERROR);
 		return 0;
 
 	}
 
 	# move from vhost dir to inactive dir
-	system ('mv', $vhost_dir."/$domain", $inactive_dir."/$domain");
+	system ('mv', "$vhost_dir/$domain", "$inactive_dir/$domain");
 	
 	return 1;
 }
@@ -192,13 +207,16 @@ sub enableSite {
 	$self->logger("function: enableSite($domain)", $self->FUNC_CALL);
 	my $inactive_dir = $self->getInactiveDir();
 	my $vhost_dir = $self->getVhostDir();
+	my $check = $self->getValidateObj();
 	
-	if ($self->checkVhost($domain)) {
+	if ($check->is_active($domain, $vhost_dir)) {
+	#if ($self->checkVhost($domain)) {
 		$self->logger("site configuration file for $domain is already in proper directory.", $self->ERROR);
 		return 0;
 	} 
 
-	if (!$self->checkInactive($domain)) {
+	if (!$check->is_active($domain, $inactive_dir)) {
+	#if (!$self->checkInactive($domain)) {
 		$self->logger("$domain does not exist while trying to enable site.", $self->ERROR);
 		return 0;
 	}
@@ -243,4 +261,14 @@ sub checkWebDir {
 	return -d "$web_dir/$domain";
 }
 
+sub setValidateObj {
+	my ($self, $obj) = @_;
+
+	$self->{validate} = $obj;
+	return 1;
+}
+sub getValidateObj {
+	my ($self) = @_;
+	return $self->{validate};
+}
 1;

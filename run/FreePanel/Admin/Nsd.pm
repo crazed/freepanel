@@ -2,6 +2,7 @@
 package FreePanel::Admin::Nsd;
 use FreePanel::Config;
 use DNS::ZoneParse;
+use FreePanel::Validate::DNS;
 use strict;
 use warnings;
 use base qw(FreePanel::Config);
@@ -11,6 +12,7 @@ sub new
 	my $self = $class->SUPER::new();
 	
 	bless $self, $class;
+	$self->setValidateObj(FreePanel::Validate::DNS->new);
 
 	$self->logger("class: FreePanel::Admin::Nsd object created.", $self->FULL_DEBUG);
 	return $self;
@@ -33,7 +35,7 @@ sub logIt{
 	open LOG, '>>', $self->getLogFile();
 	my $timestamp = sprintf("%02d-%02d-%4d %02d:%02d:%02d",
 		$mon+1,$mday,$year+1900,$hour,$min,$sec);
-	print LOG "$timestamp :: $log\n";
+	print LOG "$log\n";
 	close LOG;
 
 }
@@ -46,38 +48,58 @@ sub addZone {
 	$self->logger("function: addDomain($domain, $ip_addr) called.", $self->FUNC_CALL);
 
 	# check for errors
-	if (checkZone($self, $domain) != 1) {
+	my $check = $self->getValidateObj();
+
+	if (!$check->is_validDomain($domain)) {
+		$self->logger("$domain is not a valid domain name.", $self->ERROR);
 		return 0;
 	}
 
-	my ($sec, $min, $hour, $mday, $mon, 
-		$year, $wday, $yday, $isdst)=localtime(time);
+	if (!$check->is_newZoneFile($domain, $self->getZoneDir)) {
+		$self->logger("$domain already exists in ".$self->getZoneDir, $self->ERROR);
+		return 0;
+	}
+
+	if (!$check->checkDnsConfig($domain, $self->getNsdConfig)) {
+		$self->logger("$domain already exists in ".$self->getNsdConfig, $self->ERROR);
+		return 0;
+	}
+
+	## deprecated code
+	#if (checkZone($self, $domain) != 1) {
+	#	return 0;
+	#}
+
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)=localtime(time);
 	my $serial = sprintf("%4d%02d%02d00",
 		$year+1900,$mon+1,$mday);
 
 	# add to nsd.conf
-	open (NSD, '>>', $self->getNsdConfig());
-	print NSD "zone:\n\t";
-	print NSD "name: \"$domain\"\n\t";
-	print NSD "zonefile: \"$domain\"\n\t";
-	#print NSD "include: ".$self->{include_xfer}."\n\n";
+	open my $fh, '>>', $self->getNsdConfig() 
+		or die "FATAL: ".$self->getNsdConfig.": $!";
+	print $fh "zone:\n\t";
+	print $fh "name: \"$domain\"\n\t";
+	print $fh "zonefile: \"$domain\"\n";
+	#print $fh "include: ".$self->{include_xfer}."\n\n";
 
-	close NSD;
+	close $fh;
 
 	$self->logger("added $domain to ".$self->getNsdConfig.".", $self->INFO);
 
 	# create zone file
-	open(ZONE, '>', $self->getZoneDir()."/$domain");
-	open(ZONE_T, '<', $self->getZoneTemplate());
+	open ZONE, '>', $self->getZoneDir()."/$domain" 
+		or die "FATAL: ".$self->getZoneDir()."/$domain: $!";
+	open my $zone_t, '<', $self->getZoneTemplate()
+		or die "FATAL: ".$self->getZoneTemplate().": $!";
 
-	while(<ZONE_T>) {
+	while(<$zone_t>) {
 		s/<DOMAIN>/$domain/;
 		s/<SERIAL>/$serial/;
 		s/<IP_ADDR>/$ip_addr/;
 		print ZONE;
 	}
 
-	close ZONE_T;
+	close $zone_t;
 	close ZONE;
 
 	$self->logger("created zone file for $domain. Serial: $serial", $self->INFO);
@@ -97,7 +119,9 @@ sub removeDomain {
 	my $end_delete;	
 
 	# open the config file and load to array
-	open (NSD, '<', $self->getNsdConfig());
+	open NSD, '<', $self->getNsdConfig()
+		or die "FATAL: ".$self->getNsdConfig().": $!";
+
 	my @config = <NSD>;
 	close NSD;
 
@@ -141,7 +165,9 @@ sub removeDomain {
 	}
 
 	# rewrite the file without the lines that needed to be removed
-	open (NSD, '>', $self->getNsdConfig());
+        open NSD, '>', $self->getNsdConfig()
+                or die "FATAL: ".$self->getNsdConfig().": $!";
+
 	foreach my $line (@config) {
 		print NSD $line if $line;
 	}
@@ -163,9 +189,16 @@ sub delA {
 	$self->logger("function: delA($domain, $name)", $self->FUNC_CALL);
 
 	# check that zone file exists
-	if (!$self->checkZone($domain)) {
+	my $check = $self->getValidateObj();
+	if ($check->is_newZoneFile($domain, $self->getZoneDir)) {
+		$self->logger("zone file for $domain does not exist.", $self->ERROR);
 		return 0;
 	}
+
+	## deprecated code
+	#if (!$self->checkZone($domain)) {
+	#	return 0;
+	#}
 
 	# set the zone file name
 	my $zonedb = $self->getZoneDir."/$domain";
@@ -197,20 +230,38 @@ sub addA {
 	$self->logger("function: addA($domain, $name, $host)", $self->FUNC_CALL);
 
 	# check if zone file even exists
-	if (!$self->checkZone($domain)) {
+	my $check = $self->getValidateObj();
+        if ($check->is_newZoneFile($domain, $self->getZoneDir)) {
+                $self->logger("zone file for $domain does not exist.", $self->ERROR);
+                return 0;
+        }
+
+	if (!$check->is_validName($name)) {
+		$self->logger("$name is not a valid name for DNS", $self->ERROR);
 		return 0;
 	}
+
+	if (!$check->is_validHost($host)) {
+		$self->logger("$host is not a valid host for an A record.", $self->ERROR);
+		return 0;
+	}
+
+
+	## deprecated code
+	#if (!$self->checkZone($domain)) {
+	#	return 0;
+	#}
 
 	# make sure $name is valid and $host is a valid ip
-	if (!$self->validateName($name)) {
-		$self->logger("$name is not a valid name for DNS", $self->VARIABLE);
-		return 0;
-	}
+	#if (!$self->validateName($name)) {
+	#	$self->logger("$name is not a valid name for DNS", $self->VARIABLE);
+	#	return 0;
+	#}
 
-	if (!$self->validateHost($host)) {
-		$self->logger("$host is not a valid IP address", $self->VARIABLE);
-		return 0;
-	}
+	#if (!$self->validateHost($host)) {
+	#	$self->logger("$host is not a valid IP address", $self->VARIABLE);
+	#	return 0;
+	#}
 
         my $zonedb = $self->getZoneDir."/$domain";
 
@@ -239,15 +290,33 @@ sub addMX {
 	$self->logger("function: addMX($domain, $name, $host, $priority)", $self->FUNC_CALL);
 
 	# check zone file even exists
-	if (!$self->checkZone($domain)) {
+	my $check = $self->getValidateObj();
+        if ($check->is_newZoneFile($domain, $self->getZoneDir)) {
+                $self->logger("zone file for $domain does not exist.", $self->ERROR);
+                return 0;
+        }
+
+	if (!$check->is_validName($name)) {
+		$self->logger("$name is not a valid name for DNS", $self->ERROR);
 		return 0;
 	}
 
+	if (!$check->is_validName($host)) {
+		$self->logger("$host is not a valid host for an MX record.", $self->ERROR);
+		return 0;
+	}
+
+
+	## deprecated code
+	#if (!$self->checkZone($domain)) {
+	#	return 0;
+	#}
+
 	# mx records don't use IP addresses, both must be names
-        if (!$self->validateName($name) or !$self->validateName($host)) {
-                $self->logger("$name is not a valid name for DNS", $self->VARIABLE);
-                return 0; 
-        }
+        #if (!$self->validateName($name) or !$self->validateName($host)) {
+        #        $self->logger("$name is not a valid name for DNS", $self->VARIABLE);
+        #        return 0; 
+        #}
 
         my $zonedb = $self->getZoneDir."/$domain";
 
@@ -279,9 +348,16 @@ sub delMX {
 	$self->logger("function: delMX($domain, $host)", $self->FUNC_CALL);
 
 	# check if the zone file exists
-	if (!$self->checkZone($domain)) {
-		return 0;
-	}
+        my $check = $self->getValidateObj();
+        if ($check->is_newZoneFile($domain, $self->getZoneDir)) {
+                $self->logger("zone file for $domain does not exist.", $self->ERROR);
+                return 0;
+        }
+
+	## depcrecated code
+	#if (!$self->checkZone($domain)) {
+	#	return 0;
+	#}
 
 	# set the zone file name
 	my $zonedb = $self->getZoneDir."/$domain";
@@ -313,9 +389,16 @@ sub delTXT {
 	$self->logger("function: delTXT($domain, $text)", $self->FUNC_CALL);
 
 	# check if the zone file exists
-	if (!$self->checkZone($domain)) {
-		return 0;
-	}
+        my $check = $self->getValidateObj();
+        if ($check->is_newZoneFile($domain, $self->getZoneDir)) {
+                $self->logger("zone file for $domain does not exist.", $self->ERROR);
+                return 0;
+        }
+
+	## deprecated code
+	#if (!$self->checkZone($domain)) {
+	#	return 0;
+	#}
 
 	# set the zone file name
 	my $zonedb = $self->getZoneDir."/$domain";
@@ -347,14 +430,26 @@ sub addTXT {
 	$self->logger("function: addTXT($domain, $name, $text)", $self->FUNC_CALL);
 
 	# check if zone file even exists
-	if (!$self->checkZone($domain)) {
+        my $check = $self->getValidateObj();
+        if ($check->is_newZoneFile($domain, $self->getZoneDir)) {
+                $self->logger("zone file for $domain does not exist.", $self->ERROR);
+                return 0;
+        }
+
+	if (!$check->is_validName($name)) {
+		$self->logger("$name is not a valid name for DNS", $self->ERROR);
 		return 0;
 	}
 
-	if (!$self->validateName($name)) {
-		$self->logger("$name is not a valid name for DNS", $self->VARIABLE);
-		return 0;
-	}
+	## deprecated code
+	#if (!$self->checkZone($domain)) {
+	#	return 0;
+	#}
+
+	#if (!$self->validateName($name)) {
+	#	$self->logger("$name is not a valid name for DNS", $self->VARIABLE);
+	#	return 0;
+	#}
 
         my $zonedb = $self->getZoneDir."/$domain";
 
@@ -378,14 +473,14 @@ sub addTXT {
         return 1;
 }
 
-sub validateName {
-	my ($self, $name) = @_;
-	return $name =~ /^([-@.a-z0-9]+)$/;
-}
-sub validateHost {
-	my ($self, $host) = @_;
-	return $host =~ /^(\d+)(\.\d+){3}$/;
-}
+#sub validateName {
+#	my ($self, $name) = @_;
+#	return $name =~ /^([-@.a-z0-9]+)$/;
+#}
+#sub validateHost {
+#	my ($self, $host) = @_;
+#	return $host =~ /^(\d+)(\.\d+){3}$/;
+#}
 
 
 #///////////////////////////////////////////////#
@@ -438,5 +533,18 @@ sub restart {
 	# restart NSD 
 	$self->logger("NSD is being restarted..", $self->INFO);
 	return 1;
+}
+
+sub setValidateObj {
+	my ($self, $obj) = @_;
+	$self->logger("function: setValidateObj($obj)", $self->FUNC_CALL);
+
+	$self->{validate} = $obj;
+	return 1;	
+}
+
+sub getValidateObj {
+	my ($self) = @_;
+	return $self->{validate};
 }
 1;

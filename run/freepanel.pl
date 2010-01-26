@@ -48,6 +48,10 @@ $app->dispatch(
 		plugin => 'FreePanel::Plugin::DNS',
 		methods => [qw/ default add /],
 	},
+	http => {
+		plugin => 'FreePanel::Plugin::HTTP',
+		methods => [qw/ default add /],
+	},
 );
 $app->setup;
     

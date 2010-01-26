@@ -9,12 +9,12 @@ $nsd->setDebug(3);
 
 print "Adding new domain.............";
 $nsd->addZone($domain, "10.10.10.10");
-if ($nsd->checkZone($domain) == -2) {
-	print "ok!\n"
-}
-#if (-e $nsd->getZoneDir()."/$domain") {
-#	print "ok!\n";
+#if ($nsd->checkZone($domain) == -2) {
+#	print "ok!\n"
 #}
+if (-e $nsd->getZoneDir()."/$domain") {
+	print "ok!\n";
+}
 else {
 	print "error :(\n";
 }

@@ -8,9 +8,10 @@ my %configs;
 ## log levels, used by log()
 use constant {
         FULL_DEBUG      => 10,
-        VARIABLE        => 6,
-        DB_QUERY        => 5,
-        FUNC_CALL       => 4,
+        VARIABLE        => 7,
+        DB_QUERY        => 6,
+        FUNC_CALL       => 5,
+	WEB		=> 4,
         INFO            => 3,
         WARNING         => 2,
         ERROR           => 1,
@@ -20,7 +21,7 @@ sub new
 {
 	my $class = shift;
 	my $self = { 
-		config_file	=> '/home/crazed/freepanel/freepanel/freepanel.conf',
+		config_file	=> '/etc/freepanel/freepanel.conf',
 	};
 
 	%configs = getConfigs($self->{config_file});
@@ -47,6 +48,9 @@ sub logger {
         elsif ($log_level == 3) {
                 $level_name = "INFO";
         }
+	elsif ($log_level == 4) {
+		$level_name = "WEB";
+	}
         else {
                 $level_name = "DEBUG";
         }
