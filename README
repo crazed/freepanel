@@ -1,17 +1,21 @@
+These instructions are probably out of date. 
+READ THE SOURCE and check out #freepanel on freenode for help.
+
 SETTING UP DEV ENVIRONMENT
 ==========================
 yum install -y nsd httpd postfix mysql dovecot
 mkdir /etc/httpd/{vhosts,inactive}
 mkdir /etc/nsd/zones
-cp -r /path/src/freepanel /etc
+cd /path/to/src
+cp -r run/etc/freepanel /etc
 
 STARTING STAND ALONE SERVER
 =========================
-cd /path/src/setup/FreePanel
+cd setup/FreePanel
 perl Makefile.PL
 make && make install
-cd /path/src/run
-perl freepanel.pl
+cd ../run
+perl freepanel.pl --debug
 
 POSTFIX DATABASE SETUP
 =========================
@@ -20,6 +24,8 @@ mysql < /path/src/setup/setup_db.sql
 
 RUNNING TESTS
 =========================
-perl /panel/src/httpd/httpd_test.pl
-perl /panel/src/nsd/nsd_test.pl
-perl /panel/src/postfix/postfix_test.pl
+Tests are in this directory:
+run/FreePanel/t
+
+You will need to make sure the config is 
+properly set (/etc/freepanel/freepanel.conf) for your system
