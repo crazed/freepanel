@@ -1,0 +1,7 @@
+[% INCLUDE header.tt %]
+
+[% message %]
+
+
+[% INCLUDE footer.tt %]
+

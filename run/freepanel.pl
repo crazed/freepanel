@@ -5,53 +5,64 @@ use warnings;
 
 use FreePanel;
 use Template;
-use FindBin qw($Bin);
+
+##### Set your doman for sessions ####
+my $domain = 'perlmovement.org';
+######################################
+
 
 my $tt = Template->new({
-	INCLUDE_PATH => './templates',
-	INTERPOLATE => 1,
-}) or die "$Template::ERROR\n";
+    INCLUDE_PATH => './templates',
+    INTERPOLATE  => 1,
+}) || die "$Template::ERROR\n";
+
 
 my $app = FreePanel->new(
     
-    PLUGINS => [ @INC, $Bin ],
-    
-    404     => 'FreePanel::Plugin::My404',
+    PLUGINS => [ @INC, './' ],
+    NOLOAD  => [ ],
+    404     => 'FreePanel::Plugin::My404', 
     AUTH    => 'FreePanel::Plugin::MyAuth',
 
 );
 
-my $admin = FreePanel::Admin->new();
-
 $app->stash(
-    #config => FreePanel::Config->getConfigs(),
-	tt		=> $tt,
-	admin		=> $admin,
+    config => FreePanel::Config::Basic->config("./etc/freepanel/freepanel.conf"),
+    tt     => $tt,
 );
 
 $app->dispatch(
 
     root => {
-        #plugin => 'FreePanel::Plugin::Status',
-		plugin => 'FreePanel::Plugin::NewSite',
-        methods => [qw/ default go /],
+        plugin => 'FreePanel::Plugin::Root',
+        methods => [qw/ default /],
+        session => [qw/ username class /],
     },
-	new => {
-		plugin	=> 'FreePanel::Plugin::NewSite',
-		methods	=> [qw/ default go /],
-	},
-	status => {
-		plugin => 'FreePanel::Plugin::Status',
-		methods => [qw/ default /],
-	},
-	dns => {
-		plugin => 'FreePanel::Plugin::DNS',
-		methods => [qw/ default add /],
-	},
-	http => {
-		plugin => 'FreePanel::Plugin::HTTP',
-		methods => [qw/ default add /],
-	},
+    test => {
+        plugin => 'FreePanel::Plugin::Test',
+        methods => [qw/ default /],
+        session => [qw/ username class /],
+    },
 );
-$app->setup;
+$app->setup(
+    session => {
+        store => {
+            class => 'File',
+            args => { dir => './tmp' },
+        },
+        state => {
+            class => 'Cookie',
+            args => {
+                name => 'FreePanel',
+                path => '/',
+                domain => $domain,
+            },
+        }
+    },
+    static => {
+        regexp => qr{^/(robots.txt|favicon.ico|(?:skins|css|js|images)/.+)$},
+        docroot => '/usr/home/infrared/dev/freepanel/run/',
+    },
+);
+
     

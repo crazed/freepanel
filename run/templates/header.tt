@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+    <title>FreePanel</title>
+    <style type="text/css" media="screen">@import "/skins/default/css/style.css";</style>
+
+</head>
+  <BODY>
+    <DIV id="header"><img src="/images/freepanel-logo.png"></h1>  </DIV>
+    <DIV id="sidebar">
+    <p>
+
+    <b>My Info</b><br />
+
+    <span class="indent">username: [% vars.session.username %]</span><br />
+    <span class="indent">class:   [% vars.session.class %]</span><br />
+    </p>
+
+    <p>
+    <b>Services</b><br />
+
+
+    [% class = vars.session.class %]
+    [% FOR key IN vars.config.modules.keys %]
+
+        [% IF vars.config.class.$class.$key.use_me == 1 %]
+
+            <span class="indent"><a href=" [% vars.config.modules.$key.dispatch %]">[% vars.config.modules.$key.display %]</a></span><br />
+        [% END %]
+    [% END %]
+</p>
+<p>
+    <b>Control</b><br />
+    [% IF vars.config.class.$class.reload_config == 1 %]
+        <span class="indent"><a href=/?reload=yes>Reload Config</a><br />
+    [% END %]
+</p>
+
+
+
+
+ </DIV>
+    <DIV id="main"> 
+

@@ -1,0 +1,40 @@
+[% IF success.defined %]
+<html><head>
+<meta http-equiv="refresh" content="2">
+</head>
+<body><center><br /><br />
+<img src="/images/loading.gif" />
+</body>
+</html>
+
+[% ELSE %]
+
+<html>
+<head>
+    <style type="text/css" media="screen">@import "/skins/default/css/style.css";</style>
+</head>
+<body>
+<center>
+
+<br /><br />
+
+<form method="POST" action="/" autocomplete="OFF">
+
+
+<div style="width:300px;">
+<fieldset>
+<h1>Login</h1>
+<p><label>username</label> <input type="text" name="username"></p>
+<p><label>password</label> <input type="password" name="password"></p>
+<input class="input" type="submit" value="  login  "></p>
+</fieldset>
+</div>
+
+[% IF message.defined %]
+[% message %]
+[% END %]
+</center>
+
+</body>
+</html>
+[% END %]

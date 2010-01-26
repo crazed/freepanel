@@ -1,0 +1,21 @@
+<html>
+
+<body>
+
+[% IF success.defined %]
+
+    Hello there, [% firstname %] [% lastname %]!
+
+[% ELSE %]
+
+    <form method="POST" action="/">
+    <table border="0">
+    <tr><td>firstname</td><td><input type="text" name="firstname"></td></tr>
+    <tr><td>lastname</td><td><input type="text" name="lastname"></td></tr>
+    <tr><td colspan="2"><input type="submit" value="Submit"></td></tr>
+    </table>
+    </form>
+[% END %]
+
+</body>
+</html>

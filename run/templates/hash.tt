@@ -1,0 +1,14 @@
+
+
+
+[% IF hash.defined %]
+
+    [% hash %]
+[% END %]
+
+
+<form method="post" action="/hash">
+
+<input type="text" name="hash">
+<input type="submit" value ="submit">
+</form>
