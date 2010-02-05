@@ -1,0 +1,4 @@
+[% INCLUDE header.tt %]
+<p>Index</p>
+<a href="add">Add new vhost</a>
+[% INCLUDE footer.tt %]

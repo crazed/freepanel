@@ -1,0 +1,51 @@
+[% INCLUDE header.tt %]
+[% BLOCK error_msg %]
+	<div id="error">
+		[% error %]
+	</div>
+[% END %]
+
+<div id="field_wrapper">
+
+  <form action="add" method="post">
+
+        <div id="field_title_full">Vhost Configuration:</div>
+
+        <div id="field_title">Owner:</div>
+	<div id="field_area"><input type="text" name="owner" value="[% params.owner %]" /></div><br />
+	[% IF error.owner.defined %]
+	[% PROCESS error_msg error=error.owner %]
+	[% END %]
+
+        <div id="field_title">IP Address:</div>
+	<div id="field_area"><input type="text" name="ip_addr" value="[% params.ip_addr %]" /></div><br />
+        [% IF error.ip_addr.defined %]
+        [% PROCESS error_msg error=error.ip_addr %]
+        [% END %]
+
+        <div id="field_title">Server Name:</div>
+	<div id="field_area"><input type="text" name="servername" value="[% params.servername %]" /></div><br />
+        [% IF error.servername.defined %]
+        [% PROCESS error_msg error=error.servername %]
+        [% END %]
+
+        <div id="field_title">Server Aliases:</div>
+	<div id="field_area"><input type="text" name="serveralias" value="[% params.serveralias %]" /></div>
+        [% IF error.serveralias.defined %]
+        [% PROCESS error_msg error=error.serveralias %]
+        [% END %]
+
+	<div style="text-align: right">
+	<input style="width: 100px;" type="submit" value="Submit" name="submit" />
+	</div>
+
+  </form>
+
+  <div id="error"> 
+	[% FOR item IN error %]
+		[% item %]<br />
+	[% END %]
+  </div>
+
+</div>
+[% INCLUDE footer.tt %]

@@ -7,8 +7,8 @@ use FreePanel;
 use Template;
 
 ##### CHANGE ME ######################
-my $domain = 'example.org';
-my $docroot = '/change/this/';
+my $domain = 'dev.crazy.lan';
+my $docroot = '/home/crazed/freepanel/run/';
 ######################################
 
 
@@ -43,6 +43,10 @@ $app->dispatch(
         plugin => 'FreePanel::Plugin::Test',
         methods => [qw/ default /],
         session => [qw/ username class /],
+    },
+    apache => {
+	plugin => 'FreePanel::Plugin::Apache',
+	methods => [qw/ default add/],
     },
 );
 $app->setup(

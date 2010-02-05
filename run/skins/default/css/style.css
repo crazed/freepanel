@@ -59,3 +59,57 @@ a:link {color:#3e778f;}
 a:visited {color:#3e778f;}
 a:hover {text-decoration: underline; }
 
+#field_wrapper{
+
+	width: 30%;
+
+	padding: 0px;
+
+	border: 1px solid black;
+
+}
+#field_area input {
+	width: 95%;
+}
+
+#field_title{
+
+	width: 50%;
+	text-align: right;
+
+	float: left;
+
+}
+
+#field_area{
+
+	width: 50%;
+
+	text-align: right;
+	float: left;
+
+}
+
+#field_title_full {
+
+	background-color: #f0f0f0;
+	padding: 5px;
+
+	font-size: 30px;
+
+}
+
+textarea {
+
+	width: 100%;
+
+	height: 200px;
+
+}
+#error {
+	display: block;
+	width: 100%;
+	color: red;
+	text-align: right;
+	float: left;
+}
