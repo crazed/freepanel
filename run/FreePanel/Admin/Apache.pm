@@ -86,7 +86,12 @@ sub addServerAlias {
 
 sub addSite {
 	my ($self, $domain, $ip_addr) = @_;
-	$self->logger("function: addSite($domain, $ip_addr) called.", $self->FUNC_CALL);
+	if ($ip_addr) {
+		$self->logger("function: addSite($domain, $ip_addr) called.", $self->FUNC_CALL);
+	}
+	else {
+		$self->logger("function: addSite($domain) called.", $self->FUNC_CALL);
+	}
 
         my $vhost_dir = $self->getVhostDir();
         my $vhost_templ = $self->getVhostTemplate();
