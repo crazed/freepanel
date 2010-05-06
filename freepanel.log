@@ -1,8 +1,0 @@
-05-06-2010 12:29:54 :: [ INFO ] added new vhost for example.com.
-05-06-2010 12:29:54 :: [ INFO ] removed vhost configuration for example.com.
-05-06-2010 12:29:54 :: [ DEBUG ] successfully opened ssh connection to localhost.
-05-06-2010 12:29:54 :: [ INFO ] 'touch a' executed on localhost.
-05-06-2010 12:29:54 :: [ DEBUG ] successfully opened ssh connection to localhost.
-05-06-2010 12:29:54 :: [ INFO ] 'touch b' executed on localhost.
-05-06-2010 12:29:54 :: [ DEBUG ] successfully opened ssh connection to localhost.
-05-06-2010 12:29:54 :: [ INFO ] 'touch c' executed on localhost.
