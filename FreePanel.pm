@@ -8,6 +8,14 @@ use Sys::Syslog qw/ :DEFAULT setlogsock /;
 # When calling the logger function, you should supply one of these levels
 #  example: $self->logger("hi", $self->FULL_DEBUG);
 use constant {
+	# ssl related errors
+	CERTS_INVALID	=> 300,
+	CERT_NOEXIST	=> 301,
+	KEY_NOEXIST	=> 302,
+
+        # ssh related errors
+	SSH_FAIL        => 200,
+
 	# httpd related errors
 	VHOST_EXISTS	=> 100,
 	VHOST_NOEXIST	=> 101,

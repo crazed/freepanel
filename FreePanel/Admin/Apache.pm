@@ -152,6 +152,11 @@ sub enable_site {
 		return $self->VHOST_NOEXIST;
 	}
 
+	if ($self->has_validssl($self->get_inactivedir."/$domain")) {
+		$self->logger("vhost for $domain has invalid ssl private/public keys.", $self->ERROR);
+		return $self->CERTS_INVALID;
+	}
+
 	system 'mv', $self->get_inactivedir."/$domain", $self->get_vhostdir."/$domain";
 	$self->logger("enabled vhost configuration for $domain.", $self->INFO);
 	return 0;
@@ -184,6 +189,56 @@ sub is_active {
 sub is_newdir {
 	my ($self, $domain) = @_;
 	return ! -d $self->get_webdir . "/$domain";
+}
+sub has_validssl {
+	my ($self, $vhost_config) = @_;
+
+	open my $config, '<', $vhost_config or die $!;
+	my @config = <$config>;
+	close $config;
+
+	# search for apache directives regarding ssl
+	#         SSLCertificateFile /etc/httpd/ssl/<DOMAIN>.crt
+	#         SSLCertificateKeyFile /etc/httpd/ssl/<DOMAIN>.key
+
+	my $cert;
+	my $key;
+	foreach my $line (@config) {
+		# trim white space so we can match from start of line
+		$line =~ s/^\s+//;
+		$line =~ s/\s+$//;
+		if ($line =~ /^SSLCertificateFile (.*)/) {
+			$cert = $1;
+		}
+		if ($line =~ /^SSLCertificateKeyFile (.*)/) {
+			$key = $1;
+		}
+	}	
+	if (!$cert && !$key) {
+		return 0; # no cert or key found
+	}
+
+        if (! -e $crt) {
+                return $self->CERT_NOEXIST;
+        }
+        if (! -e $key) {
+                return $self->KEY_NOEXIST;
+        }
+
+        open my $pipe, "openssl x509 -noout -modulus -in $crt |" or die $!;
+	my $crt_modulus = <$pipe>;
+        close $pipe;
+
+        open $pipe, "openssl rsa -noout -modulus -in $key |" or die $!;
+        my $key_modulus = <$pipe>;
+        close $pipe;
+
+        if ($crt ne $key) {
+                return $self->CERTS_INVALID;
+        }
+
+	return 0;
+
 }
 
 ### Accessors
