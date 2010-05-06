@@ -21,7 +21,7 @@ sub exec_helper {
 	# tried to use $chan->shell but was crashing...
 	foreach my $helper (@_) {
 		my $c = $self->get_channel($host);
-		my $script = $helper->{script};
+		my $script = $self->get_helperdir($host)."/".$helper->{script};
 		my $args = $helper->{args};
 		$c->exec("$script $args");
 		$self->logger("'$script $args' executed on $host.", $self->INFO);
@@ -52,7 +52,7 @@ sub get_channel {
 
 }
 
-sub get_helpersdir {
+sub get_helperdir {
 	my ($self, $host) = @_;
 	return $self->{_conf}->{ssh}{$host}{helpers};
 }

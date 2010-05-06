@@ -31,7 +31,7 @@ use constant {
 sub new {
         my $class = shift;
         my $self = {
-                config_file     => 'freepanel.conf',
+                config_file     => '/usr/local/freepanel/etc/freepanel.conf',
         };
 
 	if (! -e $self->{config_file}) {

@@ -13,6 +13,7 @@ use FreePanel::Admin::SSH;
 #$print $ref->{global}{log_file};
 
 my $apache = FreePanel::Admin::Apache->new();
+my $ssh = FreePanel::Admin::SSH->new();
 print "Vhost dir: ".$apache->get_vhostdir."\n";
 print "Inactive dir: ".$apache->get_inactivedir."\n";
 print "Templaate: ".$apache->get_template."\n";
@@ -24,14 +25,13 @@ print "adding a new vhost....";
 if (!$apache->add_vhost('example.com')) {
 	print "ok!\n";
 }
-print "removing a vhost......";
-if (!$apache->rm_vhost('example.com')) {
-	print "ok!\n";
-}
+#print "removing a vhost......";
+#if (!$apache->rm_vhost('example.com')) {
+#	print "ok!\n";
+#}
 
 print "attempting ssh........";
-my $ssh = FreePanel::Admin::SSH->new();
-my @array = ( { script => 'touch', args => 'a' }, { script => 'touch', args => 'b' }, { script => 'touch', args => 'c'} );
+my @array = ( { script => 'enable_site', args => 'example.com' } );
 if (!$ssh->exec_helper('localhost', @array)) {
 	print "ok!\n";
 }

@@ -24,7 +24,7 @@ sub add_vhost {
 	close $template;
 
 	if ($ip_addr) {
-		open my $new_vhost, '>', $self->get_vhostdir."/$domain" or die $1;
+		open my $new_vhost, '>', $self->get_inactivedir."/$domain" or die $1;
 		foreach my $line (@template) {
 			$line =~ s/<DOMAIN>/$domain/;
 			$line =~ s/<IP_ADDR>/$ip_addr/;
@@ -33,7 +33,7 @@ sub add_vhost {
 		close $new_vhost;
 	}
 	else {
-		open my $new_vhost, '>', $self->get_vhostdir."/$domain" or die $1;
+		open my $new_vhost, '>', $self->get_inactivedir."/$domain" or die $1;
 		foreach my $line (@template) {
 			$line =~ s/<DOMAIN>/$domain/;
 			$line =~ s/<IP_ADDR>/\*/;
@@ -147,7 +147,7 @@ sub enable_site {
 		return $self->VHOST_EXISTS;
 	}
 
-	if (!$self->is_active($domain)) {
+	if (!$self->is_inactive($domain)) {
 		$self->logger("vhost does not exist for $domain while trying to enable.", $self->ERROR);
 		return $self->VHOST_NOEXIST;
 	}
@@ -172,6 +172,10 @@ sub restart {
 }
 
 ### Validation Methods
+sub is_inactive {
+	my ($self, $domain) = @_;
+	return -e $self->get_inactivedir . "/$domain";
+}
 sub is_active {
 	my ($self, $domain) = @_;
 	return -e $self->get_vhostdir . "/$domain";

@@ -1,0 +1,14 @@
+05-06-2010 13:09:44 :: [ ERROR ] vhost config already exists for example.com.
+05-06-2010 13:09:44 :: [ DEBUG ] successfully opened ssh connection to localhost.
+05-06-2010 13:09:44 :: [ INFO ] '/home/dev/freepanel-refactor/etc/freepanel/helpers/enable_site example.com' executed on localhost.
+05-06-2010 13:09:44 :: [ ERROR ] vhost configuration for example.com is already enabled.
+05-06-2010 13:10:25 :: [ ERROR ] vhost config already exists for example.com.
+05-06-2010 13:10:25 :: [ DEBUG ] successfully opened ssh connection to localhost.
+05-06-2010 13:10:25 :: [ INFO ] '/home/dev/freepanel-refactor/etc/freepanel/helpers/enable_site example.com' executed on localhost.
+05-06-2010 13:10:25 :: [ ERROR ] vhost configuration for example.com is already enabled.
+05-06-2010 13:19:14 :: [ ERROR ] vhost config already exists for example.com.
+05-06-2010 13:19:15 :: [ DEBUG ] successfully opened ssh connection to localhost.
+05-06-2010 13:19:15 :: [ INFO ] '/usr/local/freepanel/bin/enable_site example.com' executed on localhost.
+05-06-2010 13:19:23 :: [ INFO ] added new vhost for example.com.
+05-06-2010 13:19:23 :: [ DEBUG ] successfully opened ssh connection to localhost.
+05-06-2010 13:19:23 :: [ INFO ] '/usr/local/freepanel/bin/enable_site example.com' executed on localhost.

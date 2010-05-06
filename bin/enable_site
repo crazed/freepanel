@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use lib '/home/dev/freepanel-refactor/';
+use FreePanel::Admin::Apache;
+
+if ($#ARGV < 0) {
+        print ("Usage: $0 <domain1> <domain2> ..\n");
+        exit();
+}
+
+my $apache = FreePanel::Admin::Apache->new();
+foreach my $domain (@ARGV) {
+        $apache->enable_site($domain);
+}
