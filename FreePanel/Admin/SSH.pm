@@ -24,7 +24,7 @@ sub exec_helper {
 		my $script = $self->get_helperdir($host)."/".$helper->{script};
 		my $args = $helper->{args};
 		$c->exec("$script $args");
-		$self->logger("'$script $args' executed on $host.", $self->INFO);
+		$self->logger("'$script $args' executed on $host.", $self->DEBUG);
 	}
 
 	return 0;

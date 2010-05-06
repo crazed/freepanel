@@ -72,7 +72,7 @@ sub logger {
 	}
 
 	openlog 'FreePanel', '', 'user';
-	syslog $level_name, $msg;
+	syslog $level_name, "$level_name: $msg";
 
 	# old code for logging directly to a file
 	#my ($sec, $min, $hour, $mday, $mon, 

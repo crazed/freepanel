@@ -153,6 +153,7 @@ sub enable_site {
 	}
 
 	system 'mv', $self->get_inactivedir."/$domain", $self->get_vhostdir."/$domain";
+	$self->logger("enabled vhost configuration for $domain.", $self->INFO);
 	return 0;
 }
 sub disable_site {

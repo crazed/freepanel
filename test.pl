@@ -21,18 +21,18 @@ print "Web dir: ".$apache->get_webdir."\n";
 print "Web uid: ".$apache->get_uid."\n";
 print "Web gid: ".$apache->get_gid."\n";
 
-print "adding a new vhost....";
-if (!$apache->add_vhost('example.com')) {
-	print "ok!\n";
-}
+#print "adding a new vhost....";
+#if (!$apache->add_vhost('example.com')) {
+#	print "ok!\n";
+#}
 #print "removing a vhost......";
 #if (!$apache->rm_vhost('example.com')) {
 #	print "ok!\n";
 #}
 
 print "attempting ssh........";
-my @array = ( { script => 'enable_site', args => 'example.com' } );
-if (!$ssh->exec_helper('localhost', @array)) {
+my @array = ( {script => 'add_vhost', args => 'example.com' }, { script => 'enable_site', args => 'example.com' } );
+if (!$ssh->exec_helper('test', @array)) {
 	print "ok!\n";
 }
 #my $channel = $ssh->connect('localhost');
