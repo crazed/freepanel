@@ -73,6 +73,8 @@ sub logger {
 
 	openlog 'FreePanel', '', 'user';
 	syslog $level_name, $msg;
+
+	# old code for logging directly to a file
 	#my ($sec, $min, $hour, $mday, $mon, 
 	#	$year, $wday, $yday, $isdst) = localtime(time);
 
@@ -103,6 +105,9 @@ sub get_debug {
 	my $self = shift;
 	return $self->{_conf}->{global}{debug};
 }
+
+# this is kinda deprecated, will leave it around for now
+# reason: now using syslog
 sub get_logfile {
 	my $self = shift;
 	return $self->{_conf}->{global}{log_file};

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use lib '/usr/local/freepanel/';
+use lib '/usr/local/freepanel';
 use FreePanel::Admin::Apache;
 
 if ($#ARGV < 0) {
@@ -11,5 +11,5 @@ if ($#ARGV < 0) {
 
 my $apache = FreePanel::Admin::Apache->new();
 foreach my $domain (@ARGV) {
-        $apache->enable_site($domain);
+        $apache->add_vhost($domain);
 }
