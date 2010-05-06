@@ -13,6 +13,9 @@ use constant {
 	WEBDIR_EXISTS	=> 102,
 	WEBDIR_NOEXIST	=> 103,
 
+	# ssh related errors
+	SSH_FAIL	=> 200,
+
 	# log levels
         FULL_DEBUG      => 10,
         VARIABLE        => 7,

@@ -5,6 +5,7 @@ use warnings;
 # welcome to freepanel
 use FreePanel;
 use FreePanel::Admin::Apache;
+use FreePanel::Admin::SSH;
 
 #my $fp = FreePanel->new( );
 #print $fp->config;
@@ -27,3 +28,12 @@ print "removing a vhost......";
 if (!$apache->rm_vhost('example.com')) {
 	print "ok!\n";
 }
+
+print "attempting ssh........";
+my $ssh = FreePanel::Admin::SSH->new();
+my @array = ( { script => 'touch', args => 'a' }, { script => 'touch', args => 'b' }, { script => 'touch', args => 'c'} );
+if (!$ssh->exec_helper('localhost', @array)) {
+	print "ok!\n";
+}
+#my $channel = $ssh->connect('localhost');
+#$channel->exec('touch hi');

@@ -42,7 +42,7 @@ sub add_vhost {
 		close $new_vhost;
 	}
 
-
+	$self->logger("added new vhost for $domain.", $self->INFO);
 	return 0;
 }
 
@@ -108,6 +108,7 @@ sub add_webdir {
 	}
 	chown $uid, $gid, @dirs;
 
+	$self->logger("added new webdir for $domain.", $self->INFO);
 	return 0;
 }
 
@@ -116,6 +117,7 @@ sub rm_vhost {
 
 	if ($self->is_active($domain)) {
 		unlink $self->get_vhostdir."/$domain";
+		$self->logger("removed vhost configuration for $domain.", $self->INFO);
 		return 0;
 	}
 
@@ -129,6 +131,7 @@ sub rm_webdir {
 	my $web_dir = $self->get_webdir;
 	if (!$self->is_newdir($domain)) {
 		system 'rm', '-rf', "$web_dir/$domain";
+		$self->logger("removed webdir for $domain.", $self->INFO);
 		return 0;
 	}
 
