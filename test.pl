@@ -31,7 +31,20 @@ print "Web gid: ".$apache->get_gid."\n";
 #}
 
 print "attempting ssh........";
-my @array = ( {script => 'add_vhost', args => 'example.com' }, { script => 'enable_site', args => 'example.com' } );
+my @array = ( 
+	{ 
+	script => 'add_vhost', 
+	args => 'example.com' 
+	}, 
+	{ 
+	script => 'enable_site', 
+	args => 'example.com' 
+	},
+	{ 
+	script => 'rm_vhost',
+	args => 'example.com'
+	}, 
+);
 if (!$ssh->exec_helper('test', @array)) {
 	print "ok!\n";
 }
