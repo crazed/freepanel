@@ -3,6 +3,7 @@ package FreePanel;
 use strict;
 use warnings;
 use Config::General;
+use Sys::Syslog qw/ :DEFAULT setlogsock /;
 
 # When calling the logger function, you should supply one of these levels
 #  example: $self->logger("hi", $self->FULL_DEBUG);
@@ -55,30 +56,32 @@ sub logger {
 	}
 
 	if ($log_level == 1) {
-		$level_name = "ERROR";
+		$level_name = "err";
 	}
 	elsif ($log_level == 2) {
-		$level_name = "WARNING";
+		$level_name = "warn";
 	}
 	elsif ($log_level == 3) {
-		$level_name = "INFO";
+		$level_name = "info";
 	}
 	elsif ($log_level == 4) {
-		$level_name = "WEB";
+		$level_name = "info";
 	}
 	else {
-		$level_name = "DEBUG";
+		$level_name = "debug";
 	}
 
-	my ($sec, $min, $hour, $mday, $mon, 
-		$year, $wday, $yday, $isdst) = localtime(time);
+	openlog 'FreePanel', '', 'user';
+	syslog $level_name, $msg;
+	#my ($sec, $min, $hour, $mday, $mon, 
+	#	$year, $wday, $yday, $isdst) = localtime(time);
 
-	my $ts = sprintf("%02d-%02d-%4d %02d:%02d:%02d",
-		$mon+1, $mday, $year+1900, $hour, $min, $sec);
+	#my $ts = sprintf("%02d-%02d-%4d %02d:%02d:%02d",
+	#	$mon+1, $mday, $year+1900, $hour, $min, $sec);
 
-	open my $log, '>>', $self->get_logfile or die "FATAL: $!";
-	print $log "$ts :: [ $level_name ] $msg\n";
-	close $log;
+	#open my $log, '>>', $self->get_logfile or die "FATAL: $!";
+	#print $log "$ts :: [ $level_name ] $msg\n";
+	#close $log;
 
 	return 0;
 }
