@@ -12,4 +12,18 @@ use FreePanel::Admin::Apache;
 #$print $ref->{global}{log_file};
 
 my $apache = FreePanel::Admin::Apache->new();
-print "Vhost dir: ".$apache->get_vhostdir."\n"
+print "Vhost dir: ".$apache->get_vhostdir."\n";
+print "Inactive dir: ".$apache->get_inactivedir."\n";
+print "Templaate: ".$apache->get_template."\n";
+print "Web dir: ".$apache->get_webdir."\n";
+print "Web uid: ".$apache->get_uid."\n";
+print "Web gid: ".$apache->get_gid."\n";
+
+print "adding a new vhost....";
+if (!$apache->add_vhost('example.com')) {
+	print "ok!\n";
+}
+print "removing a vhost......";
+if (!$apache->rm_vhost('example.com')) {
+	print "ok!\n";
+}

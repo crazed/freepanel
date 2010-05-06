@@ -19,26 +19,29 @@ sub add_vhost {
 		return $self->VHOST_EXISTS;
 	}
 
-	open my $new_vhost, '>', $self->get_vhostdir."/$domain" or die $1;
 	open my $template, '<', $self->get_template or die $!;
+	my @template = <$template>;
+	close $template;
 
 	if ($ip_addr) {
-		while (<$template>) {
-			s/<DOMAIN>/$domain/;
-			s/<IP_ADDR>/$ip_addr/;
-			print $new_vhost;
+		open my $new_vhost, '>', $self->get_vhostdir."/$domain" or die $1;
+		foreach my $line (@template) {
+			$line =~ s/<DOMAIN>/$domain/;
+			$line =~ s/<IP_ADDR>/$ip_addr/;
+			print $new_vhost $line;
 		}
+		close $new_vhost;
 	}
 	else {
-		while (<$template>) {
-			s/<DOMAIN>/$domain/;
-			s/<IP_ADDR>/\*/;
-			print $new_vhost;
+		open my $new_vhost, '>', $self->get_vhostdir."/$domain" or die $1;
+		foreach my $line (@template) {
+			$line =~ s/<DOMAIN>/$domain/;
+			$line =~ s/<IP_ADDR>/\*/;
+			print $new_vhost $line;
 		}
+		close $new_vhost;
 	}
 
-	close $template;
-	close $new_vhost;
 
 	return 0;
 }
