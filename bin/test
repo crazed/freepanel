@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use lib '/usr/local/freepanel';
+use FreePanel::Admin::Apache;
+
+my $apache = FreePanel::Admin::Apache->new();
+$apache->logger("this is a test! if you see this, freepanel is working.", $apache->INFO);
