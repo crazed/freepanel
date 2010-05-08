@@ -30,9 +30,37 @@ sub exec_helper {
 	return 0;
 
 }
-	
+
+sub cluster_push {
+	my $self = shift;
+	my $clname = shift;
+
+	my @helpers = @_;
+	my @hosts = $self->get_cluster($clname);
+	foreach my $host (@hosts) {
+	#	if ($host eq 'localhost') {
+			# TODO: implement code for when it is localhost.. 
+			# - screw ssh to localhost that's dumb
+			# - would be nice if it didn't resort to running the helper scripts
+	#		next;
+	#	}
+		if ($self->exec_helper($host, @helpers)) {
+			$self->logger("There was an error on $host.", $self->ERROR);
+		}
+	}
+	return 0;
+}
 
 ### Accessor methods
+
+# TODO: error checking
+sub get_cluster {
+	my ($self, $cluster) = @_;
+	return split /,/, $self->{_conf}->{clusters}{$cluster};
+}
+
+# TODO: needs more error checking
+# - verify keys exist
 sub get_channel {
         my ($self, $host) = @_;
 
@@ -52,6 +80,8 @@ sub get_channel {
 
 }
 
+# TODO: all of these need more error checking
+#  - verify that $host config is set!
 sub get_helperdir {
 	my ($self, $host) = @_;
 	return $self->{_conf}->{ssh}{$host}{helpers};
