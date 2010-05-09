@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use lib '/usr/local/freepanel';
+use lib '/usr/local/freepanel/lib';
 use FreePanel::Admin::NSD;
 
 if ($#ARGV < 1) {
