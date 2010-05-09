@@ -1,0 +1,13 @@
+#!/usr/bin/sudo /usr/bin/perl
+use strict;
+use warnings;
+use lib '/usr/local/freepanel/lib';
+use FreePanel;
+
+my $fp = FreePanel->new();
+my $cmd = join ' ', @ARGV;
+if (system $cmd) {
+	$fp->logger("'$cmd' did not execute properly, check manually.", $fp->ERROR);
+	exit;
+}
+$fp->logger("'$cmd' executed successfully!", $fp->INFO);

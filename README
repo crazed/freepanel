@@ -1,4 +1,18 @@
 Current prereqs:
 Config::General
 Net::SSH2
-DNZ::ZoneParse
+DNS::ZoneParse
+
+Quick notes:
+- need to setup ssh keys in advance
+- need to give your management user sudo access with NOPASSWD option
+- basically connects to all servers in config file and runs one of the helper scripts
+
+Completed:
+- cluster management over ssh
+- Apache module
+- run_cmd helper allows basic root command execution, useful for software installs
+
+Todo:
+- finish porting NSD module and other useful modules from master -> refactor
+- a cron modification system
