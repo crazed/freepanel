@@ -1,0 +1,12 @@
+#!/usr/bin/sudo /usr/bin/perl
+use strict;
+use warnings;
+use lib '/usr/local/freepanel';
+use FreePanel::Admin::Apache;
+
+my $apache = FreePanel::Admin::Apache->new();
+if ($apache->restart) {
+	$apache->logger("Problem restarting Apache, check manually.", $apache->ERROR);
+	exit;
+}
+$apache->logger("Apache restart successful!", $apache->INFO);

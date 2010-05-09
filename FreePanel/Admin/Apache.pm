@@ -173,8 +173,8 @@ sub disable_site {
 
 sub restart {
 	my $self = shift;
-	$self->logger("Apache is being restarted (not really implemented yet).", $self->INFO);
-	return 0;
+	$self->logger("Apache is being restarted.", $self->INFO);
+	return system $self->get_restartcmd;
 }
 
 ### Validation Methods
@@ -242,6 +242,10 @@ sub has_validssl {
 }
 
 ### Accessors
+sub get_restartcmd {
+	my $self = shift;
+	return $self->{_conf}->{apache}{restart_cmd};
+}
 sub get_vhostdir {
 	my $self = shift;
 	return $self->{_conf}->{apache}{vhost_dir};
