@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use lib '/usr/local/freepanel';
+use FreePanel::Admin::NSD;
+
+if ($#ARGV < 1) {
+        print ("Usage: $0 <domain> <ip_addr>\n");
+        exit();
+}
+
+my $domain = $ARGV[0];
+my $ip_addr = $ARGV[1];
+my $nsd = FreePanel::Admin::NSD->new();
+$nsd->add_zone($domain, $ip_addr);
