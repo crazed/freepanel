@@ -83,7 +83,7 @@ sub logger {
 		$level_name = "debug";
 	}
 
-	openlog 'FreePanel', '', 'user';
+	openlog 'FreePanel', '', $self->get_loglvl;
 	syslog $level_name, "$level_name: $msg";
 
 	# old code for logging directly to a file
@@ -101,6 +101,10 @@ sub logger {
 }
 
 ### Accessors 
+sub get_loglvl {
+	my $self = shift;
+	return $self->{_conf}->{global}{log_level};
+}
 sub get_http {
 	my $self = shift;
 	return $self->{_conf}->{global}{http};
