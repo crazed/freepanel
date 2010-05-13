@@ -5,11 +5,9 @@ use lib '/usr/local/freepanel/lib';
 use FreePanel::Admin::Apache;
 
 if ($#ARGV < 0) {
-        print ("Usage: $0 <domain1> <domain2> ..\n");
+        print ("Usage: $0 <domain>\n");
         exit();
 }
 
 my $apache = FreePanel::Admin::Apache->new();
-foreach my $domain (@ARGV) {
-        $apache->rm_webdir($domain);
-}
+exit $apache->rm_webdir($domain);

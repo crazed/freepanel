@@ -12,4 +12,4 @@ if ($#ARGV < 1) {
 my $domain = $ARGV[0];
 my $ip_addr = $ARGV[1];
 my $nsd = FreePanel::Admin::NSD->new();
-$nsd->add_zone($domain, $ip_addr);
+exit $nsd->add_zone($domain, $ip_addr);
