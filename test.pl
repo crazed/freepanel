@@ -35,7 +35,7 @@ print "attempting ssh........";
 my @array = ( 
 	{ 
 	script => 'test', 
-	args => '' 
+	args => 'asdflkja' 
 	}, 
 );
 if (!$ssh->cluster_push('web', @array)) {

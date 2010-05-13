@@ -23,6 +23,7 @@ sub exec_helper {
 		my $c = $self->get_channel($host);
 		my $script = $self->get_helperdir($host)."/".$helper->{script};
 		my $args = $helper->{args};
+		$c->blocking(0); # this fixes a weird bug where Net::SSH2 hung on a RHEL box
 		$c->exec("$script $args");
 		while (<$c>) { print };
 		if ($c->exit_status) {
