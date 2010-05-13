@@ -24,6 +24,11 @@ sub exec_helper {
 		my $script = $self->get_helperdir($host)."/".$helper->{script};
 		my $args = $helper->{args};
 		$c->exec("$script $args");
+		while (<$c>) { print };
+		if ($c->exit_status) {
+			$self->logger("'$script $args' failed to run on $host\n", $self->ERROR);
+			return $self->SSH_FAIL;
+		}
 		$self->logger("'$script $args' executed on $host.", $self->FULL_DEBUG);
 	}
 
@@ -34,6 +39,7 @@ sub exec_helper {
 sub cluster_push {
 	my $self = shift;
 	my $clname = shift;
+	my $errors = 0; 
 
 	my @helpers = @_;
 	my @hosts = $self->get_cluster($clname);
@@ -45,10 +51,10 @@ sub cluster_push {
 	#		next;
 	#	}
 		if ($self->exec_helper($host, @helpers)) {
-			$self->logger("There was an error on $host.", $self->ERROR);
+			$errors++;
 		}
 	}
-	return 0;
+	return $errors;
 }
 
 ### Accessor methods

@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use lib '/usr/local/freepanel/lib';
 
 # welcome to freepanel
 use FreePanel;
@@ -40,7 +41,7 @@ my @array = (
 if (!$ssh->cluster_push('web', @array)) {
 	print "ok!\n";
 }
-#if (!$ssh->exec_helper('test', @array)) {
+#if (!$ssh->exec_helper('localhost', @array)) {
 #	print "ok!\n";
 #}
 #my $channel = $ssh->connect('localhost');
