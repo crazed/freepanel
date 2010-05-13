@@ -14,7 +14,8 @@ sub new {
 ### General Methods
 sub add_vhost {
 	my ($self, $domain, $ip_addr) = @_;
-	if ($self->is_active($domain)) {
+	my $config = "$domain.conf";
+	if ($self->is_active($config)) {
 		$self->logger("vhost config already exists for $domain.", $self->ERROR);
 		return $self->VHOST_EXISTS;
 	}
@@ -24,7 +25,7 @@ sub add_vhost {
 	close $template;
 
 	if ($ip_addr) {
-		open my $new_vhost, '>', $self->get_inactivedir."/$domain" or die $1;
+		open my $new_vhost, '>', $self->get_inactivedir."/$config" or die $1;
 		foreach my $line (@template) {
 			$line =~ s/<DOMAIN>/$domain/;
 			$line =~ s/<IP_ADDR>/$ip_addr/;
@@ -33,7 +34,7 @@ sub add_vhost {
 		close $new_vhost;
 	}
 	else {
-		open my $new_vhost, '>', $self->get_inactivedir."/$domain" or die $1;
+		open my $new_vhost, '>', $self->get_inactivedir."/$config" or die $1;
 		foreach my $line (@template) {
 			$line =~ s/<DOMAIN>/$domain/;
 			$line =~ s/<IP_ADDR>/\*/;
@@ -48,8 +49,9 @@ sub add_vhost {
 
 sub add_alias {
 	my ($self, $domain) = @_;
+	my $config = "$domain.conf";
 
-	if (!$self->is_active($domain)) {
+	if (!$self->is_active($config)) {
 		$self->logger("$domain configuration does not exist or is inactive.", $self->ERROR);
 		return $self->VHOST_NOEXIST;
 	}
@@ -62,7 +64,7 @@ sub add_alias {
 
 	$alias =~ s/\s+$//; # remove trailing space if any
 
-	open my $vhost, '<', $self->get_vhostdir."/$domain" or die "FATAL: $!";
+	open my $vhost, '<', $self->get_vhostdir."/$config" or die "FATAL: $!";
 	my @config = <$vhost>;
 	close $vhost;
 	for my $i (0 .. $#config) { 
@@ -81,7 +83,7 @@ sub add_alias {
 		my $server_alias = "ServerAlias $alias\n";
 		splice @config, $server_line, 0, $server_alias; 
 	}
-	open $vhost, '>', $self->get_vhostdir."/$domain" or die "FATAL: $!";
+	open $vhost, '>', $self->get_vhostdir."/$config" or die "FATAL: $!";
 	foreach my $line (@config) {
 		print $vhost $line;
 	}
@@ -114,9 +116,10 @@ sub add_webdir {
 
 sub rm_vhost {
 	my ($self, $domain) = @_;
+	my $config = "$domain.conf";
 
-	if ($self->is_active($domain)) {
-		unlink $self->get_vhostdir."/$domain";
+	if ($self->is_active($config)) {
+		unlink $self->get_vhostdir."/$config";
 		$self->logger("removed vhost configuration for $domain.", $self->INFO);
 		return 0;
 	}
@@ -141,34 +144,36 @@ sub rm_webdir {
 
 sub enable_site {
 	my ($self, $domain) = @_;
+	my $config = "$domain.conf";
 
-	if ($self->is_active($domain)) {
+	if ($self->is_active($config)) {
 		$self->logger("vhost configuration for $domain is already enabled.", $self->ERROR);
 		return $self->VHOST_EXISTS;
 	}
 
-	if (!$self->is_inactive($domain)) {
+	if (!$self->is_inactive($config)) {
 		$self->logger("vhost does not exist for $domain while trying to enable.", $self->ERROR);
 		return $self->VHOST_NOEXIST;
 	}
 
-	if ($self->has_validssl($self->get_inactivedir."/$domain")) {
+	if ($self->has_validssl($self->get_inactivedir."/$config")) {
 		$self->logger("vhost for $domain has invalid ssl private/public keys.", $self->ERROR);
 		return $self->CERTS_INVALID;
 	}
 
-	system 'mv', $self->get_inactivedir."/$domain", $self->get_vhostdir."/$domain";
+	system 'mv', $self->get_inactivedir."/$config", $self->get_vhostdir."/$config";
 	$self->logger("enabled vhost configuration for $domain.", $self->INFO);
 	return 0;
 }
 sub disable_site {
 	my ($self, $domain) = @_;
+	my $config = "$domain.conf";
 
-	if (!$self->is_active($domain)) {
+	if (!$self->is_active($config)) {
 		$self->logger("no configuration file for $domain found while trying to disable.", $self->ERROR);
 		return $self->VHOST_NOEXIST
 	}
-	system 'mv', $self->get_vhostdir."/$domain", $self->get_inactivedir."/$domain";
+	system 'mv', $self->get_vhostdir."/$config", $self->get_inactivedir."/$config";
 }
 
 sub restart {
@@ -179,12 +184,12 @@ sub restart {
 
 ### Validation Methods
 sub is_inactive {
-	my ($self, $domain) = @_;
-	return -e $self->get_inactivedir . "/$domain";
+	my ($self, $config) = @_;
+	return -e $self->get_inactivedir . "/$config";
 }
 sub is_active {
-	my ($self, $domain) = @_;
-	return -e $self->get_vhostdir . "/$domain";
+	my ($self, $config) = @_;
+	return -e $self->get_vhostdir . "/$config";
 }
 sub is_newdir {
 	my ($self, $domain) = @_;
