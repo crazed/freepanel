@@ -8,6 +8,10 @@ use Sys::Syslog qw/ :DEFAULT setlogsock /;
 # When calling the logger function, you should supply one of these levels
 #  example: $self->logger("hi", $self->FULL_DEBUG);
 use constant {
+	# config related errors
+	CONFIG_MISSING 	=> 500,
+	CONFIG_INVALID	=> 501,
+
 	# dns related errors
 	ZONE_CONFIG_EXISTS => 400,
 	ZONE_FILE_EXISTS => 401,

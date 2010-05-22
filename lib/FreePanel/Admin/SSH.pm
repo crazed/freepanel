@@ -66,14 +66,19 @@ sub get_cluster {
 	return split /,/, $self->{_conf}->{clusters}{$cluster};
 }
 
-# TODO: needs more error checking
-# - verify keys exist
 sub get_channel {
         my ($self, $host) = @_;
 
         my $pub = $self->get_pubkey($host);
         my $priv = $self->get_privkey($host);
         my $user = $self->get_user($host);
+
+	if ($pub == $self->CONFIG_MISSING || $priv == $self->CONFIG_MISSING || $user == $self->CONFIG_MISSING) {
+		return $self->CONFIG_MISSING;
+	}
+	if ($pub == $self->CONFIG_INVALID || $priv == $self->CONFIG_INVALID || $user == $self->CONFIG_INVALID) {
+		return $self->CONFIG_INVALID;
+	}
 
         my $ssh = Net::SSH2->new();
         $ssh->connect($host) or die $!;
@@ -87,24 +92,48 @@ sub get_channel {
 
 }
 
-# TODO: all of these need more error checking
-#  - verify that $host config is set!
 sub get_helperdir {
 	my ($self, $host) = @_;
+	if (!$self->{_conf}->{ssh}{$host}{helpers}) {
+		$self->logger("SSH config: no helperdir set for $host!", $self->ERROR);
+		return $self->CONFIG_MISSING;
+	}
 	return $self->{_conf}->{ssh}{$host}{helpers};
 }
 sub get_pubkey {
 	my ($self, $host) = @_;
-	return $self->{_conf}->{ssh}{$host}{pub_key};
+	my $key = $self->{_conf}->{ssh}{$host}{pub_key};
+        if (!$key) {
+                $self->logger("SSH config: no pub_key set for $host!", $self->ERROR);
+                return $self->CONFIG_MISSING;
+        }
+	if (! -e $key) {
+		$self->logger("SSH config: public key '$key' does not exist!", $self->ERROR);
+		return $self->CONFIG_INVALID;
+	}
+	return $key;
 }
 
 sub get_privkey {
 	my ($self, $host) = @_;
-	return $self->{_conf}->{ssh}{$host}{priv_key};
+	my $key = $self->{_conf}->{ssh}{$host}{priv_key};
+        if (!$key) {
+                $self->logger("SSH config: no priv_key set for $host!", $self->ERROR);
+                return $self->CONFIG_MISSING;
+        }
+	if (! -e $key) {
+		$self->logger("SSH config: private key '$key' does not exist!", $self->ERROR);
+		return $self->CONFIG_INVALID;
+	}
+	return $key;
 }
 
 sub get_user {
 	my ($self, $host) = @_;
+        if (!$self->{_conf}->{ssh}{$host}{user}) {
+                $self->logger("SSH config: no user set for $host!", $self->ERROR);
+                return $self->CONFIG_MISSING;
+        }
 	return $self->{_conf}->{ssh}{$host}{user};
 }
 1;
