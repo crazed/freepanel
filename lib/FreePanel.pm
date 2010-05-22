@@ -90,6 +90,10 @@ sub logger {
 	openlog 'FreePanel', '', $self->get_loglvl;
 	syslog $level_name, "$level_name: $msg";
 
+	if ($self->get_errors) {
+		print "$level_name: $msg";
+	}
+
 	# old code for logging directly to a file
 	#my ($sec, $min, $hour, $mday, $mon, 
 	#	$year, $wday, $yday, $isdst) = localtime(time);
@@ -131,6 +135,18 @@ sub get_debug {
 sub get_logfile {
 	my $self = shift;
 	return $self->{_conf}->{global}{log_file};
+}
+
+sub get_errors {
+	my $self = shift;
+	return $self->{_conf}->{global}{raise_error}
+}
+### setters
+# set this to 1 to show errors on STDOUT
+sub set_errors {
+	my $self = shift;
+	my $value = shift;
+	$self->{_conf}->{global}{raise_error} = $value;
 }
 
 1;
