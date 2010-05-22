@@ -13,7 +13,6 @@ sub new {
 }
 ### General Methods
 
-# exec_helper needs more error checking!
 sub exec_helper {
 	my $self = shift;
 	my $host = shift;
@@ -21,6 +20,13 @@ sub exec_helper {
 	# tried to use $chan->shell but was crashing...
 	foreach my $helper (@_) {
 		my $c = $self->get_channel($host);
+	
+		# if $c is an integer, an error code was returned from get_channel
+		if ($c =~ /^-?\d+$/) {
+			$self->logger("SSH: problems connecting to $host. Check configuration values!", $self->ERROR);
+			return $self->SSH_FAIL;
+		}
+
 		my $script = $self->get_helperdir($host)."/".$helper->{script};
 		my $args = $helper->{args};
 		$c->blocking(0); # this fixes a weird bug where Net::SSH2 hung on a RHEL box
